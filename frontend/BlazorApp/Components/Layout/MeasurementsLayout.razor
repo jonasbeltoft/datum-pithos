@@ -4,31 +4,37 @@
 <PageTitle>Measurements</PageTitle>
 
 <div class="d-flex flex-row flex-grow-1">
-    <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <div class="sidebar d-flex flex-column flex-between">
 
-    <div class="nav-scrollable sidebar" onclick="document.querySelector('.navbar-toggler').click()">
-        <nav class="nav flex-column">
+        <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+        <nav class="nav nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
             <div class="nav-item pe-3">
-                <NavLink class="nav-link" href="@GetLink(1)" Match="NavLinkMatch.All">
-                    Vand målinger 1
+                <NavLink class="nav-link lh-1" href="@GetLink(1)" Match="NavLinkMatch.All">
+                    Vand målinger 1 4fg4g4g e5g eg eg e5g eg5g e4
                 </NavLink>
             </div>
             <div class="nav-item pe-3">
-                <NavLink class="nav-link" href="@GetLink(2)" Match="NavLinkMatch.All">
+                <NavLink class="nav-link lh-1" href="@GetLink(2)" Match="NavLinkMatch.All">
                     Vand målinger 2
                 </NavLink>
             </div>
             <div class="nav-item pe-3">
-                <NavLink class="nav-link" href="@GetLink(3)" Match="NavLinkMatch.All">
+                <NavLink class="nav-link lh-1" href="@GetLink(3)" Match="NavLinkMatch.All">
                     Vand målinger 3
                 </NavLink>
             </div>
             <div class="nav-item pe-3">
-                <NavLink class="nav-link" href="@GetLink(4)" Match="NavLinkMatch.All">
+                <NavLink class="nav-link lh-1" href="@GetLink(4)" Match="NavLinkMatch.All">
                     Vand målinger 4
                 </NavLink>
             </div>
         </nav>
+        <div class="nav-item pe-3 new-btn">
+            <NavLink class="nav-link px-3" href="/measurements/new" Match="NavLinkMatch.All">
+                Ny samling
+            </NavLink>
+        </div>
     </div>
 
     <main class="py-3 px-4 flex-grow-1">

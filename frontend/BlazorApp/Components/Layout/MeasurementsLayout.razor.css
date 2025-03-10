@@ -5,8 +5,6 @@
 	height: 2.5rem;
 	color: white;
 	position: absolute;
-	top: 0.5rem;
-	right: 1rem;
 	border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -55,7 +53,7 @@
 	color: black;
 }
 
-.nav-scrollable {
+.sidebar {
 	border-right: 1px solid #e2e2e2;
 }
 
@@ -73,18 +71,15 @@
 		display: block;
 
 		/* Allow sidebar to scroll for tall menus */
+		flex: 1;
 		overflow-y: auto;
 	}
 
 	.sidebar {
 		width: 300px;
-		position: sticky;
-		top: 0;
 	}
 
 	.top-row {
-		position: sticky;
-		top: 0;
 		z-index: 1;
 	}
 
@@ -93,4 +88,16 @@
 		text-align: right;
 		width: 0;
 	}
+}
+
+::deep .new-btn .nav-link {
+	background-color: #3b3b3b !important;
+	color: white !important;
+	width: 100%;
+	text-align: center;
+	justify-content: center;
+}
+
+.new-btn {
+	background-color: white;
 }
