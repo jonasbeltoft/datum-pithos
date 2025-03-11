@@ -1,48 +1,38 @@
-﻿@page "/measurements"
-@page "/measurements/{MeasurementId}"
+﻿@page "/measurements/{MeasurementId}"
 @layout MeasurementsLayout
-@attribute [StreamRendering]
+@rendermode @(new InteractiveServerRenderMode(prerender:false))
 
-@if (MeasurementId == null || MeasurementId == "")
+<h1 class="text-3xl font-bold mb-1">Måling @MeasurementId</h1>
+
+<p class="mb-3 text-zinc-700">This component demonstrates showing data.</p>
+
+@if (forecasts == null)
 {
-	<h1>Vælg venligst en måling...</h1>
+	<p><em>Loading...</em></p>
 }
 else
 {
-
-
-	<h1>Måling @MeasurementId</h1>
-
-	<p>This component demonstrates showing data.</p>
-
-	@if (forecasts == null)
-	{
-		<p><em>Loading...</em></p>
-	}
-	else
-	{
-		<table class="table">
-			<thead>
+	<table class="w-full table-auto">
+		<thead>
+			<tr class="text-left">
+				<th>Date</th>
+				<th aria-label="Temperature in Celsius">Temp. (C)</th>
+				<th aria-label="Temperature in Farenheit">Temp. (F)</th>
+				<th>Summary</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var forecast in forecasts)
+			{
 				<tr>
-					<th>Date</th>
-					<th aria-label="Temperature in Celsius">Temp. (C)</th>
-					<th aria-label="Temperature in Farenheit">Temp. (F)</th>
-					<th>Summary</th>
+					<td>@forecast.Date.ToShortDateString()</td>
+					<td>@forecast.TemperatureC</td>
+					<td>@forecast.TemperatureF</td>
+					<td>@forecast.Summary</td>
 				</tr>
-			</thead>
-			<tbody>
-				@foreach (var forecast in forecasts)
-				{
-					<tr>
-						<td>@forecast.Date.ToShortDateString()</td>
-						<td>@forecast.TemperatureC</td>
-						<td>@forecast.TemperatureF</td>
-						<td>@forecast.Summary</td>
-					</tr>
-				}
-			</tbody>
-		</table>
-	}
+			}
+		</tbody>
+	</table>
 }
 
 @code {
@@ -50,8 +40,17 @@ else
 	public string? MeasurementId { get; set; }
 	private WeatherForecast[]? forecasts;
 
+	[Inject]
+	private NavigationManager Navigation { get; set; } = default!;
+
 	protected override async Task OnInitializedAsync()
 	{
+		if (!int.TryParse(MeasurementId, out _))
+		{
+			Navigation.NavigateTo("/measurements");
+			return;
+		}
+
 		// Simulate asynchronous loading to demonstrate streaming rendering
 		await Task.Delay(500);
 
