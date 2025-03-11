@@ -57,18 +57,16 @@
 	border-right: 1px solid #e2e2e2;
 }
 
-.navbar-toggler:checked~.nav-scrollable {
+.nav-scrollable {
 	display: block;
 }
 
-@media (min-width: 641px) {
+@media (min-width: 764px) {
 	.navbar-toggler {
 		display: none;
 	}
 
 	.nav-scrollable {
-		/* Never collapse the sidebar for wide screens */
-		display: block;
 
 		/* Allow sidebar to scroll for tall menus */
 		flex: 1;
@@ -81,12 +79,6 @@
 
 	.top-row {
 		z-index: 1;
-	}
-
-	.top-row.auth ::deep a:first-child {
-		flex: 1;
-		text-align: right;
-		width: 0;
 	}
 }
 

@@ -71,15 +71,13 @@ main {
     text-decoration: underline;
 }
 
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
+.top-row {
+    justify-content: space-between;
+}
 
-    .top-row ::deep a,
-    .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+.top-row ::deep a,
+.top-row ::deep .btn-link {
+    margin-left: 0;
 }
 
 
