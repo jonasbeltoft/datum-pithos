@@ -12,4 +12,8 @@
     <Folder Include="wwwroot\fonts\inter\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Zitadel.Api" Version="3.4.7" />
+  </ItemGroup>
+
 </Project>
