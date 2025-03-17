@@ -1,4 +1,7 @@
 using BlazorApp.Components;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Zitadel.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,23 +9,52 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddAuthorization().AddAuthentication(ZitadelDefaults.AuthenticationScheme)
+.AddZitadel(
+    o =>
+    {
+        o.Authority = "http://localhost:8080/";
+        o.ClientId = "311607148553502723";
+        o.SignInScheme = IdentityConstants.ExternalScheme;
+        o.ResponseType = "code";
+        o.SaveTokens = true;
+        o.RequireHttpsMetadata = false;
+        o.UsePkce = true;
+    }
+)
+.AddExternalCookie().Configure(
+    o =>
+    {
+        o.CookieManager = new Microsoft.AspNetCore.Authentication.Cookies.ChunkingCookieManager();
+
+        o.Cookie.HttpOnly = true;
+        o.Cookie.IsEssential = true;
+        o.Cookie.SameSite = SameSiteMode.None;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    }
+);
+
+builder.Services.ConfigureCookieOidcRefresh(CookieAuthenticationDefaults.AuthenticationScheme, ZitadelDefaults.AuthenticationScheme);
+
+builder.Services.AddCascadingAuthenticationState();
+
+builder.Services.AddHttpContextAccessor();
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
+app.UseDeveloperExceptionPage();
 
-app.UseHttpsRedirection();
-
+app.UseRouting();
+app.UseCookiePolicy();
 
 app.UseAntiforgery();
 
-app.MapStaticAssets();
+app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -32,3 +32,9 @@
 
   - username: zitadel-admin@zitadel.localhost
   - password: Password1!
+
+  - username: test1@mail.com
+  - password: !Test1234
+
+  - username: test2@mail.com
+  - password: !Test1234
