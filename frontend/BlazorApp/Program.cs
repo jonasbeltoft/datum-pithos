@@ -25,9 +25,7 @@ builder.Services.AddAuthorization().AddAuthentication(ZitadelDefaults.Authentica
 .AddExternalCookie().Configure(
     o =>
     {
-        o.CookieManager = new Microsoft.AspNetCore.Authentication.Cookies.ChunkingCookieManager();
-
-        o.Cookie.HttpOnly = true;
+        o.Cookie.HttpOnly = false;
         o.Cookie.IsEssential = true;
         o.Cookie.SameSite = SameSiteMode.None;
         o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
@@ -40,6 +38,7 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

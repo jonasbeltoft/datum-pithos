@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigator
+@inject IHttpClientFactory ClientFactory
+
 
 <header class="bg-white border-b border-zinc-200">
     <div class="mx-auto flex items-center justify-between px-3 h-14 lg:px-8">
@@ -41,18 +43,19 @@
                 </div>
                 @if (showDropdown)
                 {
-                    <div class="absolute right-0 z-10 mt-1 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+                    <div class="absolute right-0 z-10 mt-1 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
                         role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
                         <div role="none">
-                            <!-- Active: "bg-zinc-100 text-zinc-900 outline-none", Not Active: "text-zinc-700" -->
+                            <div class="block px-4 py-2 text-sm text-zinc-400">
+                                @Name
+                            </div>
                             <a href="/account" class="hover:bg-zinc-100 block px-4 py-2 text-sm text-zinc-700"
-                                role="menuitem" tabindex="-1" id="menu-item-0">Account settings</a>
-                            <form method="POST" @onclick="@Logout">
-                                <AntiforgeryToken />
-                                <button type="submit"
-                                    class="hover:bg-zinc-100 block w-full px-4 py-2 text-left text-sm text-zinc-700"
-                                    role="menuitem" tabindex="-1" id="menu-item-3">Sign out</button>
-                            </form>
+                                role="menuitem" tabindex="-1" id="menu-item-0">Konto</a>
+
+                            <button type="submit" @onclick="Logout"
+                                class="hover:bg-zinc-100 block w-full px-4 py-2 text-left text-sm text-zinc-700"
+                                role="menuitem" tabindex="-1" id="menu-item-3">Log ud</button>
+
                         </div>
                     </div>
                 }
@@ -70,9 +73,23 @@
     private bool showDropdown = false;
     private bool ItemClicked { get; set; } = false;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private string Name { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState == null)
+        {
+            return;
+        }
+        var authState = await AuthState;
+        Name = authState.User.FindFirst("name")?.Value ?? "";
+    }
+
     private void Logout()
     {
-
         Navigator.NavigateTo("http://localhost:8080/oidc/v1/end_session?post_logout_redirect_uri=http://localhost:5167/&client_id=311607148553502723");
     }
 
