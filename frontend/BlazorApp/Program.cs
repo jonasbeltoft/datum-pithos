@@ -1,9 +1,7 @@
 using BlazorApp.Components;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
-using BitzArt.Blazor.Cookies;
+using BlazorApp.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
-using BlazorApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,10 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddAuthentication();
-builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddSingleton<CustomAuthStateProvider>();
+
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthorizationCore();
+
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 
 var app = builder.Build();
 
@@ -24,7 +24,9 @@ app.UseRouting();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.UseAuthorization();
+
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode().AllowAnonymous();
 
 app.Run();

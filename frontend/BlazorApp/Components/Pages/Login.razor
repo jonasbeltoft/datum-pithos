@@ -1,39 +1,38 @@
 ﻿@page "/login"
-@layout EmptyLayout
-@using BlazorApp.Models
-@using BlazorApp.Components
+@layout MainLayout
 @using System.Security.Claims
 @using System.Text.Json
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
 @using System.Text.Json.Serialization
-@inject CustomAuthStateProvider stateProvider
+@using BlazorApp.Components
+@using BlazorApp.Models
+@using BlazorApp.Services
+@attribute [AllowAnonymous]
 
-    <h1>Login</h1>
+<h1>Login</h1>
 
+<div class="">
     <div class="">
-        <div class="">
-            <EditForm Model="@Model" OnValidSubmit="@_Login" FormName="LoginForm">
-                <DataAnnotationsValidator />
-                <div class="">
-                    <label>Username</label>
-                    <InputText @bind-Value="@Model.Username" class="form-control" placeholder="Username" />
-                    <ValidationMessage For="@(() => Model.Username)" />
-                </div>
-                <div class="">
-                    <label>Password</label>
-                    <InputText @bind-Value="@Model.Password" type="password" class="form-control" placeholder="Password" />
-                    <ValidationMessage For="@(() => Model.Password)" />
-                </div>
-                <div>
-                    <span class="text-red-700">@errorMessage</span>
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </div>
-            </EditForm>
-        </div>
+        <EditForm Model="@Model" OnValidSubmit="@_Login" FormName="LoginForm">
+            <DataAnnotationsValidator />
+            <div class="">
+                <label>Username</label>
+                <InputText @bind-Value="@Model.Username" class="form-control" placeholder="Username" />
+                <ValidationMessage For="@(() => Model.Username)" />
+            </div>
+            <div class="">
+                <label>Password</label>
+                <InputText @bind-Value="@Model.Password" type="password" class="form-control" placeholder="Password" />
+                <ValidationMessage For="@(() => Model.Password)" />
+            </div>
+            <div>
+                <span class="text-red-700">@errorMessage</span>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </EditForm>
     </div>
+</div>
 
     @code {
     [SupplyParameterFromForm]

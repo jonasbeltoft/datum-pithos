@@ -1,5 +1,17 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                @{
+                    @inject NavigationManager NavigationManager;
+                    NavigationManager.NavigateTo($"/login?returnUrl={NavigationManager.ToBaseRelativePath(NavigationManager.Uri)}");
+                }
+            </NotAuthorized>
+        </AuthorizeRouteView>
     </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(EmptyLayout)">
+            <p>Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
 </Router>
