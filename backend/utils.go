@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,26 +31,31 @@ func generateNonce(length int) string {
 
 var ErrAuth = errors.New("Unauthorized")
 
-func Authorize(r *http.Request) (User, error) {
-	username := r.FormValue("username")
+func Authenticate(r *http.Request) (User, error) {
+	accessToken := r.Header.Get("Authorization")
+	if accessToken == "" {
+		return User{}, errors.New("authorization header is missing")
+	}
+
+	accessToken = strings.TrimPrefix(accessToken, "Bearer ")
+
+	username, ok := sessions[accessToken]
+	if !ok {
+		fmt.Println("Session not found")
+		return User{}, ErrAuth
+	}
+
 	user, ok := users[username]
 	if !ok {
 		fmt.Println("User not found")
-		return user, ErrAuth
+		return User{}, ErrAuth
 	}
 
-	// Check the session token
-	sessionToken, err := r.Cookie("session_token")
-	if err != nil || sessionToken.Value == "" || sessionToken.Value != user.SessionToken {
-		fmt.Println("Invalid session token")
-		return user, ErrAuth
-	}
-
-	// Check the CSRF token
-	csrfToken := r.Header.Get("X-CSRF-Token")
-	if csrfToken == "" || csrfToken != user.CSRFToken {
-		fmt.Println("Invalid CSRF token")
-		return user, ErrAuth
+	// check access token against users current token
+	if user.AccessToken != accessToken {
+		fmt.Println("Access token mismatch")
+		delete(sessions, accessToken)
+		return User{}, ErrAuth
 	}
 
 	return user, nil

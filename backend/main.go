@@ -1,22 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
 type User struct {
 	Username       string
 	HashedPassword string
-	SessionToken   string
-	CSRFToken      string
+	AccessToken    string
+	RefreshToken   string
 	DisplayName    string
 	Role           string
 }
 
 // This should be the DATABASE
 var users = map[string]User{}
+var sessions = map[string]string{}
 
 func main() {
 	http.HandleFunc("/register", register)
@@ -73,53 +74,48 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+	// Log the request
+	fmt.Println(r.RemoteAddr)
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Get the username and password from the request body
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-	if username == "" || password == "" {
+
+	decoder := json.NewDecoder(r.Body)
+	var credentials LoginBody
+	err := decoder.Decode(&credentials)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(credentials.Password, credentials.Username)
+
+	if credentials.Username == "" || credentials.Password == "" {
 		http.Error(w, "Username and password are required", http.StatusBadRequest)
 		return
 	}
 
 	// Check if the user exists and the password is correct
-	user, ok := users[username]
-	if !ok || !checkPasswordHash(password, user.HashedPassword) {
+	user, ok := users[credentials.Username]
+	if !ok || !checkPasswordHash(credentials.Password, user.HashedPassword) {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 
-	// Generate a new session token
-	sessionToken := generateNonce(32)
-	// Generate a new CSRF token
-	csrfToken := generateNonce(32)
+	// Generate a new access token
+	accessToken := generateNonce(32)
+	// Generate a new Refresh token
+	refreshToken := generateNonce(32)
 
-	// Set the session token as a cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: false,
-	})
+	// Save the access token to the user
+	user.AccessToken = accessToken
+	user.RefreshToken = refreshToken
+	users[user.Username] = user
+	sessions[accessToken] = user.Username
 
-	// Set the CSRF token as a cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    csrfToken,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: false,
-	})
-
-	// Save the session token to the user
-	user.SessionToken = sessionToken
-	user.CSRFToken = csrfToken
-	users[username] = user
-
-	fmt.Fprintln(w, "{ \"display_name\": \""+user.DisplayName+"\", \"role\": \""+user.Role+"\" }")
+	fmt.Fprintln(w, "{ \"accessToken\": \""+user.AccessToken+"\", \"refreshToken\": \""+user.RefreshToken+"\" }")
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
@@ -129,30 +125,17 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user is authorized
-	user, err := Authorize(r)
+	user, err := Authenticate(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// Clear the cookies
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour),
-		HttpOnly: true,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour),
-		HttpOnly: false,
-	})
-
-	// Clear the session token and CSRF token
-	user.SessionToken = ""
-	user.CSRFToken = ""
+	// Clear the access token and Refresh token
+	user.AccessToken = ""
+	user.RefreshToken = ""
 	users[user.Username] = user
+	delete(sessions, user.AccessToken)
 
 	fmt.Fprintln(w, "User logged out successfully")
 }
@@ -164,12 +147,16 @@ func profile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user is authorized
-	user, err := Authorize(r)
+	user, err := Authenticate(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	fmt.Fprintf(w, "Welcome, %s!\n", user.DisplayName)
+	fmt.Fprintln(w, "{ \"username\": \""+user.Username+"\", \"displayName\": \""+user.DisplayName+"\", \"role\": \""+user.Role+"\" }")
+}
 
+type LoginBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }

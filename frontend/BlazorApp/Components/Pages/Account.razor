@@ -5,5 +5,13 @@
 
 <h1>User Claims</h1>
 
+<AuthorizeView>
+
+@foreach (var claim in @context.User.Claims) {
+    @claim
+    <br />
+}
+</AuthorizeView>
+
 @code {
 }

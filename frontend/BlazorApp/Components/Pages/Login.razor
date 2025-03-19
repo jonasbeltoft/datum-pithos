@@ -34,21 +34,36 @@
     </div>
 </div>
 
-    @code {
+<AuthorizeView>
+    <Authorized>
+        @{
+        var uriBuilder = new UriBuilder(navigationManager.Uri);
+        var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+        var path = q["returnUrl"] ?? "/";
+        Console.WriteLine("Path: " + path);
+        navigationManager.NavigateTo(path);
+        }
+    </Authorized>
+</AuthorizeView>
+
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject NavigationManager navigationManager
+@code {
     [SupplyParameterFromForm]
     public LoginViewModel Model { get; set; } = new();
 
+    public bool loggingIn = false;
     private string? errorMessage;
 
-    // NavigationManager set using dependency injection
-    [Inject]
-    private NavigationManager? NavigationManager { get; set; }
-
-   
     private async Task _Login() {
-        
-
-	}
+        loggingIn = true;
+        var authProvider = (CustomAuthStateProvider) authenticationStateProvider;
+        var loginResult = await authProvider.LoginAsync(Model.Password, Model.Password);
+        if (!loginResult.Succeeded)
+        {
+            errorMessage = loginResult.Errors[0];
+        }
+    }
     
     public class LoginResponse {
         [JsonPropertyName("display_name")]
