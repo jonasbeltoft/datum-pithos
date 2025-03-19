@@ -12,6 +12,7 @@ type User struct {
 	SessionToken   string
 	CSRFToken      string
 	DisplayName    string
+	Role           string
 }
 
 // This should be the DATABASE
@@ -65,6 +66,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Username:       username,
 		HashedPassword: hashedPassword,
 		DisplayName:    username,
+		Role:           r.FormValue("role"),
 	}
 
 	fmt.Fprintln(w, "User created successfully")
@@ -101,7 +103,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_token",
 		Value:    sessionToken,
 		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
+		HttpOnly: false,
 	})
 
 	// Set the CSRF token as a cookie
@@ -117,7 +119,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	user.CSRFToken = csrfToken
 	users[username] = user
 
-	fmt.Fprintln(w, "User logged in successfully")
+	fmt.Fprintln(w, "{ \"display_name\": \""+user.DisplayName+"\", \"role\": \""+user.Role+"\" }")
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {

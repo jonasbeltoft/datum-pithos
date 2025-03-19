@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Zitadel.Api" Version="3.4.7" />
+    <PackageReference Include="BitzArt.Blazor.Cookies.Server" Version="1.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.0" />
   </ItemGroup>
 
