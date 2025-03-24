@@ -46,8 +46,8 @@
 					var role = jsonResponse!["role"]!.ToString();
 
 					var claims = new List<Claim> {
-						new Claim(ClaimTypes.Name, username),
-						new Claim(ClaimTypes.GivenName, displayName),
+						new Claim("username", username),
+						new Claim(ClaimTypes.Name, displayName),
 						new Claim(ClaimTypes.Role, role),
 					};
 

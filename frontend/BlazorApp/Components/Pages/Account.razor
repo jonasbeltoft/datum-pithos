@@ -3,15 +3,28 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
 
-<h1>User Claims</h1>
+<div class="flex flex-grow flex-col items-center justify-center">
+    <div class="flex flex-col w-80 gap-2 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
 
-<AuthorizeView>
+        <h1 class="text-3xl font-bold mb-2">User Claims</h1>
 
-@foreach (var claim in @context.User.Claims) {
-    @claim
-    <br />
-}
-</AuthorizeView>
+        <AuthorizeView>
+
+            @foreach (var claim in @context.User.Claims)
+            {
+                <div class="flex flex-row justify-between">
+                    <div class="font-semibold capitalize">
+                        @claim.Type.Split('/').Last():
+                    </div>
+                    <div class="text-zinc-500">
+                        @claim.Value
+                    </div>
+                </div>
+                <div class="border-b last:hidden"></div>
+            }
+        </AuthorizeView>
+    </div>
+</div>
 
 @code {
 }
