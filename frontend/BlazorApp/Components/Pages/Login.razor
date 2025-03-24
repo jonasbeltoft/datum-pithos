@@ -37,11 +37,11 @@
 <AuthorizeView>
     <Authorized>
         @{
-        var uriBuilder = new UriBuilder(navigationManager.Uri);
-        var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
-        var path = q["returnUrl"] ?? "/";
-        Console.WriteLine("Path: " + path);
-        navigationManager.NavigateTo(path);
+            var uriBuilder = new UriBuilder(navigationManager.Uri);
+            var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+            var path = q["returnUrl"] ?? "/";
+            Console.WriteLine("Path: " + path);
+            navigationManager.NavigateTo(path);
         }
     </Authorized>
 </AuthorizeView>
@@ -52,26 +52,28 @@
     [SupplyParameterFromForm]
     public LoginViewModel Model { get; set; } = new();
 
-    public bool loggingIn = false;
     private string? errorMessage;
 
-    private async Task _Login() {
-        loggingIn = true;
-        var authProvider = (CustomAuthStateProvider) authenticationStateProvider;
+    private async Task _Login()
+    {
+        var authProvider = (CustomAuthStateProvider)authenticationStateProvider;
         var loginResult = await authProvider.LoginAsync(Model.Password, Model.Password);
         if (!loginResult.Succeeded)
         {
             errorMessage = loginResult.Errors[0];
         }
     }
-    
-    public class LoginResponse {
+
+    public class LoginResponse
+    {
         [JsonPropertyName("display_name")]
-        public string DisplayName {
+        public string DisplayName
+        {
             get; set;
         }
         [JsonPropertyName("role")]
-        public string Role {
+        public string Role
+        {
             get; set;
         }
     }

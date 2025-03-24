@@ -1,4 +1,5 @@
-﻿namespace BlazorApp.Services {
+﻿namespace BlazorApp.Services
+{
 	using System.Net;
 	using System.Runtime.Serialization.Formatters.Binary;
 	using System.Security.Claims;
@@ -12,26 +13,32 @@
 	using Blazored.LocalStorage;
 	using Microsoft.JSInterop;
 
-	public class CustomAuthStateProvider : AuthenticationStateProvider {
+	public class CustomAuthStateProvider : AuthenticationStateProvider
+	{
 		private readonly HttpClient httpClient;
 		private readonly BrowserStorageService localStorage;
 
-		public CustomAuthStateProvider(HttpClient _httpClient, BrowserStorageService _localStorage) {
+		public CustomAuthStateProvider(HttpClient _httpClient, BrowserStorageService _localStorage)
+		{
 			this.httpClient = _httpClient;
 			this.localStorage = _localStorage;
 		}
 
-		public override async Task<AuthenticationState> GetAuthenticationStateAsync() {
+		public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+		{
 			var user = new ClaimsPrincipal(new ClaimsIdentity());
 
 			var accessToken = await localStorage.GetItemAsync("accessToken");
-			if (accessToken != null) {
+			if (accessToken != null)
+			{
 				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 			}
-			try {
+			try
+			{
 
 				var response = await httpClient.GetAsync("profile");
-				if (response.IsSuccessStatusCode) {
+				if (response.IsSuccessStatusCode)
+				{
 					var strResponse = await response.Content.ReadAsStringAsync();
 					var jsonResponse = JsonNode.Parse(strResponse);
 					var username = jsonResponse!["username"]!.ToString();
@@ -48,20 +55,38 @@
 					user = new ClaimsPrincipal(identity);
 					return new AuthenticationState(user);
 				}
-			} catch {
+			}
+			catch
+			{
 			}
 
 			return new AuthenticationState(user);
 		}
 
-		public async Task<LoginResult> LoginAsync(string username, string password) {
-			try {
-				var response = await httpClient.PostAsJsonAsync("login", new {
+		public async void LogoutAsync()
+		{
+			// Logout server side
+			await httpClient.PostAsync("logout", null);
+
+			// Logout client side
+			httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer");
+			await localStorage.RemoveItemAsync("accessToken");
+			await localStorage.RemoveItemAsync("refreshToken");
+
+			NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+		}
+		public async Task<LoginResult> LoginAsync(string username, string password)
+		{
+			try
+			{
+				var response = await httpClient.PostAsJsonAsync("login", new
+				{
 					username,
 					password
 				});
 
-				if (response.IsSuccessStatusCode) {
+				if (response.IsSuccessStatusCode)
+				{
 					var strResponse = await response.Content.ReadAsStringAsync();
 					var jsonResponse = JsonNode.Parse(strResponse);
 					var accessToken = jsonResponse?["accessToken"]?.ToString();
@@ -76,39 +101,50 @@
 					NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
 
 					return new LoginResult { Succeeded = true };
-				} else {
+				}
+				else
+				{
 					return new LoginResult { Succeeded = false, Errors = ["Wrong email or password"] };
-				} 
-			}catch { }
-			
+				}
+			}
+			catch { }
+
 			return new LoginResult { Succeeded = false, Errors = ["Connection error"] };
 		}
 	}
 
-	public class LoginResult {
-		public bool Succeeded {
+	public class LoginResult
+	{
+		public bool Succeeded
+		{
 			get; set;
 		}
-		public string[] Errors {
+		public string[] Errors
+		{
 			get; set;
 		} = [];
 	}
 
-	public class BrowserStorageService {
+	public class BrowserStorageService
+	{
 		private readonly IJSRuntime jSRuntime;
 
-		public BrowserStorageService(IJSRuntime jSRuntime) {
+		public BrowserStorageService(IJSRuntime jSRuntime)
+		{
 			this.jSRuntime = jSRuntime;
 		}
 
-		public async Task SetItemAsync(string key, string value) {
+		public async Task SetItemAsync(string key, string value)
+		{
 			await jSRuntime.InvokeVoidAsync("sessionStorage.setItem", key, value);
 		}
-		public async Task<string?> GetItemAsync(string key) {
+		public async Task<string?> GetItemAsync(string key)
+		{
 			return await jSRuntime.InvokeAsync<string>("sessionStorage.getItem", key);
 		}
 
-		public async Task RemoveItemAsync(string key) {
+		public async Task RemoveItemAsync(string key)
+		{
 			await jSRuntime.InvokeVoidAsync("sessionStorage.removeItem", key);
 		}
 	}

@@ -1,6 +1,6 @@
 services:
   backend:
-    image: backend
+    image: datum_pithos_backend
     build:
       context: ./backend
       dockerfile: Dockerfile
