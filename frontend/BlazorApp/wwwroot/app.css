@@ -18,9 +18,3 @@ h2:focus {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-.root,
-#root,
-#docs-root {
-    --tw-ring-color: #18181b;
-}

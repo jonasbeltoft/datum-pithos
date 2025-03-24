@@ -1,4 +1,63 @@
 ﻿@page "/measurements/new"
+@using System.Text.Json.Serialization
+@using System.ComponentModel.DataAnnotations
 @layout MeasurementsLayout
 
-<h1>This is where the "New" form goes</h1>
+<h1 class="text-3xl font-bold mb-2">Opret Ny samling</h1>
+
+<p class="mb-5 text-sm text-zinc-500">Udfyld formularen formularen at tilføje en ny samling af målinger. Den nye
+	samling har
+	ingen kolonner eller skabeloner.</p>
+
+<EditForm Model="@Model" OnValidSubmit="@CreateCollection" FormName="CreateCollectionForm">
+	<DataAnnotationsValidator />
+
+	<label class="block mb-2 font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Navn
+		på
+		samling</label>
+	<div class="flex flex-row gap-2">
+
+		<InputText @bind-Value="@Model.Name"
+			class="mb-2 ring-zinc-900 focus:outline-none inline-flex h-10 w-80 rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+			placeholder="Samling" />
+		<button
+			class="inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-zinc-900 text-white hover:bg-zinc-900/90 h-10 px-4 py-2"
+			type="submit">Opret</button>
+
+		@if (success)
+		{
+			<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#22c55e"
+				class="border-2 border-green-500 rounded-md inline" viewBox="0 0 17 16">
+				<path
+					d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z" />
+			</svg>
+		}
+	</div>
+	<ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-sm font-medium leading-none mb-2" />
+	<span class="text-red-500 text-sm font-medium leading-none block">@errorMessage</span>
+</EditForm>
+
+@code {
+	[SupplyParameterFromForm]
+	public CreateCollectionModel Model { get; set; } = new();
+
+	private string? errorMessage;
+	private bool success = false;
+
+	public Task CreateCollection()
+	{
+
+		success = true;
+		return Task.CompletedTask;
+	}
+
+	public class CreateCollectionModel
+	{
+		[JsonPropertyName("collection_name")]
+		[Required(AllowEmptyStrings = false, ErrorMessage = "Navn er påkrævet")]
+		public string Name
+		{
+			get; set;
+		}
+	}
+}
