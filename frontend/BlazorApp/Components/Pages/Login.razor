@@ -8,27 +8,38 @@
 @using BlazorApp.Services
 @attribute [AllowAnonymous]
 
-<h1>Login</h1>
 
-<div class="">
-    <div class="">
+<div class="flex flex-grow flex-col items-center justify-center">
+    <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        <h1 class="text-3xl font-bold mb-4">Log ind</h1>
         <EditForm Model="@Model" OnValidSubmit="@_Login" FormName="LoginForm">
             <DataAnnotationsValidator />
-            <div class="">
-                <label>Username</label>
-                <InputText @bind-Value="@Model.Username" class="form-control" placeholder="Username" />
-                <ValidationMessage For="@(() => Model.Username)" />
+            <div class="mb-4">
+                <label
+                    class="block mb-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Username</label>
+                <InputText @bind-Value="@Model.Username"
+                    class="mb-2 ring-zinc-900 focus:outline-none flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    placeholder="Username" />
+                <ValidationMessage For="@(() => Model.Username)"
+                    class="text-red-500 text-sm font-medium leading-none" />
+
             </div>
-            <div class="">
-                <label>Password</label>
-                <InputText @bind-Value="@Model.Password" type="password" class="form-control" placeholder="Password" />
-                <ValidationMessage For="@(() => Model.Password)" />
+            <div class="mb-4">
+                <label
+                    class="block mb-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Password</label>
+                <InputText @bind-Value="@Model.Password" type="password"
+                    class="mb-2 ring-zinc-900 focus:outline-none flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    placeholder="Password" />
+                <ValidationMessage For="@(() => Model.Password)"
+                    class="text-red-500 text-sm font-medium leading-none" />
+
+                <span class="text-red-500 text-sm font-medium leading-none">@errorMessage</span>
             </div>
+
             <div>
-                <span class="text-red-700">@errorMessage</span>
-            </div>
-            <div>
-                <button type="submit" class="btn btn-primary">Login</button>
+                <button
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-zinc-900 text-white hover:bg-zinc-900/90 h-10 px-4 py-2"
+                    type="submit">Login</button>
             </div>
         </EditForm>
     </div>

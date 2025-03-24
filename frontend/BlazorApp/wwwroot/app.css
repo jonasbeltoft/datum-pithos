@@ -14,3 +14,13 @@ h1:focus,
 h2:focus {
     outline: none;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.root,
+#root,
+#docs-root {
+    --tw-ring-color: #18181b;
+}
