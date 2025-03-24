@@ -1,0 +1,69 @@
+﻿@if (FilteredMeasurements == null || FilteredMeasurements.headers.Length == 0)
+{
+	<div class="flex-grow flex justify-center w-[85svw] max-w-[calc(100svw-20rem)]">
+
+		<div class="loader"></div>
+
+	</div>
+}
+else
+{
+	<div class="overflow-auto self-center max-w-full border rounded-lg">
+
+		<table class="table-row text-sm">
+			<thead class="sticky top-0 bg-white border-b">
+				<tr class="text-left align-top">
+					@foreach (var entry in FilteredMeasurements.headers)
+					{
+						<th class="p-4">
+							<span class="font-semibold mr-1">@entry.name</span>
+							<span class="text-sm font-normal text-zinc-500">@entry.unit</span>
+						</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var entry in FilteredMeasurements.entries)
+				{
+					<tr
+						class="border-b transition-colors hover:bg-zinc-100/50 data-[state=selected]:bg-muted last-of-type:border-none">
+						@{
+							int i = 0;
+						}
+						@foreach (var value in entry.measurements)
+						{
+							<td class="p-4 max-w-[20ch] text-ellipsis overflow-hidden whitespace-nowrap">@value</td>
+							i++;
+						}
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+@code {
+	[Parameter]
+	public int? measurementId { get; set; } = -1;
+
+	[Parameter]
+	public MeasurementCollection? FilteredMeasurements { get; set; }
+
+	public class MeasurementCollection
+	{
+		public MeasurementHeader[] headers = [];
+
+		public Measurement[] entries = [];
+	}
+
+	public class MeasurementHeader
+	{
+		public string name { get; set; }
+
+		public string unit = "";
+	}
+	public class Measurement
+	{
+		public string[] measurements = [];
+	}
+}

@@ -1,75 +1,120 @@
 ﻿@page "/measurements/{MeasurementId}"
+@using static BlazorApp.Components.Pages.Measurements.MeasurementsTable
 @layout MeasurementsLayout
 @rendermode @(new InteractiveServerRenderMode(prerender:false))
 
-<h1 class="text-3xl font-bold mb-1">Måling @MeasurementId</h1>
+<div class="h-full flex flex-col items-center max-w-full">
+	<div class="flex flex-col flex-grow h-1 max-w-full">
 
-<p class="mb-3 text-zinc-700">This component demonstrates showing data.</p>
+		<div class="flex flex-col self-start">
+			<h1 class="text-3xl font-bold mb-1">Samling @MeasurementId</h1>
 
-@if (forecasts == null)
-{
-	<p><em>Loading...</em></p>
-}
-else
-{
-	<table class="w-full table-auto">
-		<thead>
-			<tr class="text-left">
-				<th>Date</th>
-				<th aria-label="Temperature in Celsius">Temp. (C)</th>
-				<th aria-label="Temperature in Farenheit">Temp. (F)</th>
-				<th>Summary</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var forecast in forecasts)
-			{
-				<tr>
-					<td>@forecast.Date.ToShortDateString()</td>
-					<td>@forecast.TemperatureC</td>
-					<td>@forecast.TemperatureF</td>
-					<td>@forecast.Summary</td>
-				</tr>
-			}
-		</tbody>
-	</table>
-}
+			<p class="mb-3 text-sm text-zinc-500">This component demonstrates showing data.</p>
+		</div>
+		<input
+			class="mb-2 ring-zinc-900 focus:outline-none inline-flex h-10 w-96 rounded-md border border-input bg-zinc-200 px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 md:text-sm"
+			placeholder="Søg..." type="text" disabled=@(AllMeasurements?.entries.Length == 0) @bind="SearchString"
+			@bind:event="oninput">
+		<MeasurementsTable FilteredMeasurements="FMeasurements" measurementId="MeasurementIdInt">
+		</MeasurementsTable>
+	</div>
+</div>
 
 @code {
 	[Parameter]
 	public string? MeasurementId { get; set; }
-	private WeatherForecast[]? forecasts;
+	private string? SearchString { get; set; }
+
+	public MeasurementCollection? AllMeasurements { get; set; } = new MeasurementCollection { };
+	public MeasurementCollection? FMeasurements =>
+	new MeasurementCollection
+	{
+		headers = AllMeasurements.headers ?? [],
+		entries = AllMeasurements.entries.Where(m => m.measurements!.Any(e =>
+	e!.Contains(SearchString ??
+	string.Empty))).ToArray()
+	};
+
+	public int MeasurementIdInt = -1;
 
 	[Inject]
 	private NavigationManager Navigation { get; set; } = default!;
 
-	protected override async Task OnInitializedAsync()
+	protected async override Task OnParametersSetAsync()
 	{
-		if (!int.TryParse(MeasurementId, out _))
+		await FetchMeasurements();
+		StateHasChanged();
+	}
+
+	private async Task FetchMeasurements()
+	{
+		if (!int.TryParse(MeasurementId, out MeasurementIdInt))
 		{
 			Navigation.NavigateTo("/measurements");
 			return;
 		}
-
-		// Simulate asynchronous loading to demonstrate streaming rendering
+		AllMeasurements = new MeasurementCollection { };
+		// HTTP CALL
 		await Task.Delay(500);
 
-		var startDate = DateOnly.FromDateTime(DateTime.Now);
-		var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering",
-"Scorching" };
-		forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+		// Define headers
+		var headers = new MeasurementHeader[]
 		{
-			Date = startDate.AddDays(index),
-			TemperatureC = Random.Shared.Next(-20, 55),
-			Summary = summaries[Random.Shared.Next(summaries.Length)]
-		}).ToArray();
+new MeasurementHeader { name = "Temperature", unit = "Celsius" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Voltage", unit = "V" },
+new MeasurementHeader { name = "Ph" },
+new MeasurementHeader { name = "Temperature", unit = "Celsius" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" }
+		};
+
+		// Generate 50 entries with some missing values
+		var random = new Random();
+		var _measurements = new Measurement[5];
+		for (int i = 0; i < 5; i++)
+		{
+			// Create a row of measurements with potential "holes"
+			string[] row = new string[headers.Length];
+			for (int j = 0; j < headers.Length; j++)
+			{
+				// Randomly leave some entries empty
+				row[j] = random.Next(0, 100) > 30 // 70% chance to have a value
+				? random.Next(1, 100).ToString() // Random value
+				: ""; // Empty string to simulate "hole"
+			}
+			_measurements[i] = new Measurement { measurements = row };
+		}
+
+		// Create the MeasurementCollection
+		AllMeasurements = new MeasurementCollection
+		{
+			headers = headers,
+			entries = _measurements
+		};
 	}
 
-	private class WeatherForecast
+	protected override async Task OnInitializedAsync()
 	{
-		public DateOnly Date { get; set; }
-		public int TemperatureC { get; set; }
-		public string? Summary { get; set; }
-		public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+		await FetchMeasurements();
+
 	}
 }

@@ -18,3 +18,26 @@ h2:focus {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.loader {
+    height: 3px;
+    width: 100%;
+    --c: no-repeat linear-gradient(#18181b 0 0);
+    background: var(--c), var(--c), #d4d4da;
+    background-size: 60% 100%;
+    animation: l16 3s infinite;
+}
+
+@keyframes l16 {
+    0% {
+        background-position: -150% 0, -150% 0
+    }
+
+    66% {
+        background-position: 250% 0, -150% 0
+    }
+
+    100% {
+        background-position: 250% 0, 250% 0
+    }
+}

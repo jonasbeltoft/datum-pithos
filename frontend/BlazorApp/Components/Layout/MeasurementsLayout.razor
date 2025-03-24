@@ -3,24 +3,24 @@
 
 <PageTitle>Measurements</PageTitle>
 
-<div class="flex flex-grow flex-row">
-    <div class="flex flex-col justify-between w-64 border-r border-zinc-200">
+<div class="flex flex-grow flex-row  max-w-[calc(100%-1rem)]">
+    <div class="flex flex-col justify-between min-w-64 border-r border-zinc-200 bg-white">
         <nav class="pr-4 py-3 flex flex-col gap-2 font-medium">
             <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(1)"
                 Match="NavLinkMatch.All">
-                Vand målinger 1
+                Vand samling 1
             </NavLink>
             <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(2)"
                 Match="NavLinkMatch.All">
-                Vand målinger 2
+                Vand samling 2
             </NavLink>
             <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(3)"
                 Match="NavLinkMatch.All">
-                Vand målinger 3
+                Vand samling 3
             </NavLink>
             <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(4)"
                 Match="NavLinkMatch.All">
-                Vand målinger 4
+                Vand samling 4
             </NavLink>
         </nav>
         <div class="pr-4 py-3 font-semibold">
@@ -32,7 +32,7 @@
         </div>
     </div>
 
-    <main class="mt-4 ml-6 flex-grow">
+    <main class="mt-4 ml-6 mr-2 flex-grow max-w-[calc(100%-17rem)]">
         @Body
     </main>
 </div>
