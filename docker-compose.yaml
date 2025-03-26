@@ -1,8 +1,11 @@
+name: datum-pithos
 services:
   backend:
-    image: datum_pithos_backend
+    image: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    volumes:
+      - ./db:/db

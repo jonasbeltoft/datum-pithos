@@ -1,6 +1,11 @@
-# syntax=docker/dockerfile:1
+FROM golang:1.24.1-bookworm
 
-FROM golang:1.24.1-alpine
+# Important: required for go-sqlite3
+ENV CGO_ENABLED=1
+RUN apt-get update
+RUN apt-get install --no-install-recommends --assume-yes \
+	build-essential \
+	libsqlite3-dev
 
 WORKDIR /usr/src/app
 
@@ -9,7 +14,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -v -o /usr/local/bin/app ./...
+RUN CGO_ENABLED=1 go build -v -o /usr/local/bin/app ./...
 
 EXPOSE 8000
 
