@@ -5,7 +5,7 @@
 
 <h1 class="text-3xl font-bold mb-2">Opret Ny samling</h1>
 
-<p class="mb-5 text-sm text-zinc-500">Udfyld formularen formularen at tilføje en ny samling af målinger. Den nye
+<p class="mb-5 text-sm text-zinc-500">Udfyld formularen for at tilføje en ny samling af målinger. Den nye
 	samling har
 	ingen kolonner eller skabeloner.</p>
 
@@ -46,7 +46,7 @@
 
 	public Task CreateCollection()
 	{
-
+		errorMessage = "";
 		success = true;
 		return Task.CompletedTask;
 	}
@@ -55,7 +55,7 @@
 	{
 		[JsonPropertyName("collection_name")]
 		[Required(AllowEmptyStrings = false, ErrorMessage = "Navn er påkrævet")]
-		public string Name
+		public string? Name
 		{
 			get; set;
 		}

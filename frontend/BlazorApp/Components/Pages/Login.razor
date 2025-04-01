@@ -68,7 +68,7 @@
     private async Task _Login()
     {
         var authProvider = (CustomAuthStateProvider)authenticationStateProvider;
-        var loginResult = await authProvider.LoginAsync(Model.Password, Model.Password);
+        var loginResult = await authProvider.LoginAsync(Model.Username, Model.Password);
         if (!loginResult.Succeeded)
         {
             errorMessage = loginResult.Errors[0];
@@ -78,12 +78,12 @@
     public class LoginResponse
     {
         [JsonPropertyName("display_name")]
-        public string DisplayName
+        public string? DisplayName
         {
             get; set;
         }
         [JsonPropertyName("role")]
-        public string Role
+        public string? Role
         {
             get; set;
         }

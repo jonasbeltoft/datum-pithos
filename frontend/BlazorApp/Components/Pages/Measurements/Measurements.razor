@@ -29,8 +29,8 @@
 	public MeasurementCollection? FMeasurements =>
 	new MeasurementCollection
 	{
-		headers = AllMeasurements.headers ?? [],
-		entries = AllMeasurements.entries.Where(m => m.measurements!.Any(e =>
+		headers = AllMeasurements?.headers ?? [],
+		entries = AllMeasurements?.entries.Where(m => m.measurements!.Any(e =>
 	e!.Contains(SearchString ??
 	string.Empty))).ToArray()
 	};
@@ -60,31 +60,16 @@
 		// Define headers
 		var headers = new MeasurementHeader[]
 		{
+new MeasurementHeader { name = "Date", unit = "Time" },
 new MeasurementHeader { name = "Temperature", unit = "Celsius" },
 new MeasurementHeader { name = "Pressure", unit = "Pascal" },
 new MeasurementHeader { name = "Humidity", unit = "%" },
 new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Voltage", unit = "V" },
+			@* new MeasurementHeader { name = "Voltage", unit = "V" },
 new MeasurementHeader { name = "Ph" },
 new MeasurementHeader { name = "Temperature", unit = "Celsius" },
 new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Humidity", unit = "%" },
-new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Humidity", unit = "%" },
-new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Humidity", unit = "%" },
-new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Humidity", unit = "%" },
-new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Humidity", unit = "%" },
-new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-new MeasurementHeader { name = "Pressure", unit = "Pascal" }
+new MeasurementHeader { name = "Humidity", unit = "%" } *@
 		};
 
 		// Generate 50 entries with some missing values
@@ -103,13 +88,24 @@ new MeasurementHeader { name = "Pressure", unit = "Pascal" }
 			}
 			_measurements[i] = new Measurement { measurements = row };
 		}
-
+		_measurements = _measurements
+		.OrderByDescending(entry =>
+		{
+			int val = 0;
+			int.TryParse(entry.measurements[0], out val);
+			return val;
+		})
+		.ToArray();
 		// Create the MeasurementCollection
 		AllMeasurements = new MeasurementCollection
 		{
 			headers = headers,
 			entries = _measurements
 		};
+		for (int i = 0; i < _measurements.Count(); i++)
+		{
+			Console.WriteLine("[{0}]", string.Join(", ", _measurements[i].measurements));
+		}
 	}
 
 	protected override async Task OnInitializedAsync()

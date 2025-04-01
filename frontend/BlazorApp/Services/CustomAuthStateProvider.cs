@@ -75,7 +75,7 @@
 
 			NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
 		}
-		public async Task<LoginResult> LoginAsync(string username, string password)
+		public async Task<LoginResult> LoginAsync(string? username, string? password)
 		{
 			try
 			{
@@ -92,8 +92,8 @@
 					var accessToken = jsonResponse?["accessToken"]?.ToString();
 					var refreshToken = jsonResponse?["refreshToken"]?.ToString();
 
-					await localStorage.SetItemAsync("accessToken", accessToken);
-					await localStorage.SetItemAsync("refreshToken", refreshToken);
+					await localStorage.SetItemAsync("accessToken", accessToken!);
+					await localStorage.SetItemAsync("refreshToken", refreshToken!);
 
 					httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 

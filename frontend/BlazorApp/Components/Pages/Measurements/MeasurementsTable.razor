@@ -15,7 +15,7 @@ else
 				<tr class="text-left align-top">
 					@foreach (var entry in FilteredMeasurements.headers)
 					{
-						<th class="p-4">
+						<th class="p-4 border-r last-of-type:border-none">
 							<span class="font-semibold mr-1">@entry.name</span>
 							<span class="text-sm font-normal text-zinc-500">@entry.unit</span>
 						</th>
@@ -23,17 +23,18 @@ else
 				</tr>
 			</thead>
 			<tbody>
-				@foreach (var entry in FilteredMeasurements.entries)
+				@for (int i = 0; i < FilteredMeasurements.entries.Count(); i++)
 				{
 					<tr
-						class="border-b transition-colors hover:bg-zinc-100/50 data-[state=selected]:bg-muted last-of-type:border-none">
-						@{
-							int i = 0;
-						}
-						@foreach (var value in entry.measurements)
+						class="border-b transition-colors odd:bg-zinc-100/50 hover:bg-zinc-100 data-[state=selected]:bg-muted last-of-type:border-none">
+						@for (int j = 0; j < FilteredMeasurements.entries[i].measurements.Count(); j++)
 						{
-							<td class="p-4 max-w-[20ch] text-ellipsis overflow-hidden whitespace-nowrap">@value</td>
-							i++;
+							<td
+								class="max-w-[20ch] text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
+								<input
+									class="m-2 p-2 w-[calc(100%-1rem)] ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
+									placeholder="..." type="text" @bind="FilteredMeasurements.entries[i].measurements[j]">
+							</td>
 						}
 					</tr>
 				}
@@ -49,6 +50,10 @@ else
 	[Parameter]
 	public MeasurementCollection? FilteredMeasurements { get; set; }
 
+	private async Task ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index)
+	{
+	}
+
 	public class MeasurementCollection
 	{
 		public MeasurementHeader[] headers = [];
@@ -58,7 +63,7 @@ else
 
 	public class MeasurementHeader
 	{
-		public string name { get; set; }
+		public string name = "";
 
 		public string unit = "";
 	}
