@@ -20,6 +20,7 @@ builder.Services.AddAuthorizationCore();
 
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<BrowserStorageService>();
+builder.Services.AddScoped<MeasurementService>();
 
 var app = builder.Build();
 

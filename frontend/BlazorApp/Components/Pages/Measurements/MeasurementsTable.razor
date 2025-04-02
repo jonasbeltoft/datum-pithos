@@ -1,4 +1,5 @@
-﻿@if (FilteredMeasurements == null || FilteredMeasurements.headers.Length == 0)
+﻿@using BlazorApp.Services
+@if (measurements == null || measurements.headers.Length == 0)
 {
 	<div class="flex-grow flex justify-center w-[85svw] max-w-[calc(100svw-20rem)]">
 
@@ -13,7 +14,7 @@ else
 		<table class="table-row text-sm">
 			<thead class="sticky top-0 bg-white border-b">
 				<tr class="text-left align-top">
-					@foreach (var entry in FilteredMeasurements.headers)
+					@foreach (var entry in measurements.headers)
 					{
 						<th class="p-4 border-r last-of-type:border-none">
 							<span class="font-semibold mr-1">@entry.name</span>
@@ -23,17 +24,18 @@ else
 				</tr>
 			</thead>
 			<tbody>
-				@for (int i = 0; i < FilteredMeasurements.entries.Count(); i++)
+				@for (int i = 0; i < measurements.entries.Count(); i++)
 				{
 					<tr
-						class="border-b transition-colors odd:bg-zinc-100/50 hover:bg-zinc-100 data-[state=selected]:bg-muted last-of-type:border-none">
-						@for (int j = 0; j < FilteredMeasurements.entries[i].measurements.Count(); j++)
+						class="border-b transition-colors odd:bg-zinc-100/50 hover:bg-zinc-200 data-[state=selected]:bg-muted last-of-type:border-none">
+						@for (int j = 0; j < measurements.entries[i].measurements.Count(); j++)
 						{
 							<td
 								class="max-w-[20ch] text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 								<input
 									class="m-2 p-2 w-[calc(100%-1rem)] ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
-									placeholder="..." type="text" @bind="FilteredMeasurements.entries[i].measurements[j]">
+									placeholder="..." type="text" value="@measurements.entries[i].measurements[j]"
+									@onchange="ValueChangedAsync">
 							</td>
 						}
 					</tr>
@@ -45,30 +47,22 @@ else
 
 @code {
 	[Parameter]
-	public int? measurementId { get; set; } = -1;
+	public int? measurementId { get; set; }
 
-	[Parameter]
-	public MeasurementCollection? FilteredMeasurements { get; set; }
-
-	private async Task ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index)
+	public MeasurementCollection? measurements { get; set; }
+	protected async override Task OnParametersSetAsync()
 	{
+		// FETCH THE INITIAL DATA
+		Console.WriteLine("Parameter set");
 	}
 
-	public class MeasurementCollection
+	private async Task ValueChangedAsync(ChangeEventArgs args) // , int entry_index, int value_index
 	{
-		public MeasurementHeader[] headers = [];
-
-		public Measurement[] entries = [];
+		for (int i = 0; i < measurements.entries.Count(); i++)
+		{
+			Console.WriteLine("[{0}]", string.Join(", ", measurements.entries[i].measurements));
+		}
 	}
 
-	public class MeasurementHeader
-	{
-		public string name = "";
 
-		public string unit = "";
-	}
-	public class Measurement
-	{
-		public string[] measurements = [];
-	}
 }

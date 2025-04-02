@@ -1,5 +1,5 @@
 ﻿@page "/measurements/{MeasurementId}"
-@using static BlazorApp.Components.Pages.Measurements.MeasurementsTable
+@using BlazorApp.Services
 @layout MeasurementsLayout
 @rendermode @(new InteractiveServerRenderMode(prerender:false))
 
@@ -15,8 +15,11 @@
 			class="mb-2 ring-zinc-900 focus:outline-none inline-flex h-10 w-96 rounded-md border border-input bg-zinc-200 px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 md:text-sm"
 			placeholder="Søg..." type="text" disabled=@(AllMeasurements?.entries.Length == 0) @bind="SearchString"
 			@bind:event="oninput">
-		<MeasurementsTable FilteredMeasurements="FMeasurements" measurementId="MeasurementIdInt">
-		</MeasurementsTable>
+		@* <MeasurementsTable FilteredMeasurements="FMeasurements" measurementId="MeasurementIdInt"></MeasurementsTable> *@
+		@if (MeasurementIdInt > 0)
+		{
+			<MeasurementsTable measurementId="MeasurementIdInt"></MeasurementsTable>
+		}
 	</div>
 </div>
 
@@ -26,14 +29,14 @@
 	private string? SearchString { get; set; }
 
 	public MeasurementCollection? AllMeasurements { get; set; } = new MeasurementCollection { };
-	public MeasurementCollection? FMeasurements =>
+	@* public MeasurementCollection? FMeasurements =>
 	new MeasurementCollection
 	{
 		headers = AllMeasurements?.headers ?? [],
 		entries = AllMeasurements?.entries.Where(m => m.measurements!.Any(e =>
 	e!.Contains(SearchString ??
 	string.Empty))).ToArray()
-	};
+	}; *@
 
 	public int MeasurementIdInt = -1;
 
@@ -42,17 +45,16 @@
 
 	protected async override Task OnParametersSetAsync()
 	{
-		await FetchMeasurements();
-		StateHasChanged();
-	}
-
-	private async Task FetchMeasurements()
-	{
 		if (!int.TryParse(MeasurementId, out MeasurementIdInt))
 		{
 			Navigation.NavigateTo("/measurements");
 			return;
 		}
+	}
+
+	private async Task FetchMeasurements()
+	{
+
 		AllMeasurements = new MeasurementCollection { };
 		// HTTP CALL
 		await Task.Delay(500);
@@ -65,11 +67,11 @@ new MeasurementHeader { name = "Temperature", unit = "Celsius" },
 new MeasurementHeader { name = "Pressure", unit = "Pascal" },
 new MeasurementHeader { name = "Humidity", unit = "%" },
 new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
-			@* new MeasurementHeader { name = "Voltage", unit = "V" },
+new MeasurementHeader { name = "Voltage", unit = "V" },
 new MeasurementHeader { name = "Ph" },
 new MeasurementHeader { name = "Temperature", unit = "Celsius" },
 new MeasurementHeader { name = "Pressure", unit = "Pascal" },
-new MeasurementHeader { name = "Humidity", unit = "%" } *@
+new MeasurementHeader { name = "Humidity", unit = "%" }
 		};
 
 		// Generate 50 entries with some missing values
@@ -102,15 +104,20 @@ new MeasurementHeader { name = "Humidity", unit = "%" } *@
 			headers = headers,
 			entries = _measurements
 		};
-		for (int i = 0; i < _measurements.Count(); i++)
+		@* for (int i = 0; i < _measurements.Count(); i++)
 		{
 			Console.WriteLine("[{0}]", string.Join(", ", _measurements[i].measurements));
-		}
+		} *@
 	}
 
 	protected override async Task OnInitializedAsync()
 	{
-		await FetchMeasurements();
+		if (!int.TryParse(MeasurementId, out MeasurementIdInt))
+		{
+			Navigation.NavigateTo("/measurements");
+			return;
+		}
+		//await FetchMeasurements();
 
 	}
 }
