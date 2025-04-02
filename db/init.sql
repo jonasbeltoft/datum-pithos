@@ -1,8 +1,8 @@
 -- Create table: units
 CREATE TABLE IF NOT EXISTS units (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL);
 
--- Create table: collection
-CREATE TABLE IF NOT EXISTS collection (
+-- Create table: collections
+CREATE TABLE IF NOT EXISTS collections (
     id INTEGER PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
     description TEXT
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS samples (
     collection_id INTEGER NOT NULL,
     created_at INTEGER NOT NULL, -- Stores UNIX time at INSERT
     note TEXT,
-    FOREIGN KEY (collection_id) REFERENCES collection (id)
+    FOREIGN KEY (collection_id) REFERENCES collections (id)
 );
 
 -- Create table: sample_attributes
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS sample_attributes (
     unit_id INTEGER, -- Nullable
     name TEXT NOT NULL,
     CONSTRAINT unique_name UNIQUE (collection_id, name),
-    FOREIGN KEY (collection_id) REFERENCES collection (id),
+    FOREIGN KEY (collection_id) REFERENCES collections (id),
     FOREIGN KEY (unit_id) REFERENCES units (id)
 );
 
