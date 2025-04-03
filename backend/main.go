@@ -176,7 +176,11 @@ Gets one or more collections from db
 Query params:
 
 	collection_id: int,
-	sample_id: int
+	sample_id: int,
+	page_size: int,
+	page: int,
+	before: int, // UNIX timestamp in seconds
+	after: int // UNIX timestamp in seconds
 
 Result:
 
@@ -203,11 +207,17 @@ Result:
 				]
 			}
 			...
-		]
+		],
+		total_count: int,
+		page_info: {
+			limit: int,
+			offset: int,
+			has_next_page: true
+		}
 	}
 */
 func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
-	// Get collection_id from query parameters
+	// Get data from query parameters
 	collectionId := r.FormValue("collection_id")
 	_sampleId := r.FormValue("sample_id")
 	if collectionId == "" && _sampleId == "" {
@@ -224,6 +234,56 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		singleSample = true
 		sampleId = id
+	}
+
+	// Parse pagination params
+	_pageSize := r.FormValue("page_size")
+	_page := r.FormValue("page")
+	pageSize := 0 // Default limit
+	page := 0     // Default offset
+	var sampleArgs []interface{}
+	sampleArgs = append(sampleArgs, collectionId)
+
+	if _pageSize != "" {
+		l, err := strconv.Atoi(_pageSize)
+		if err != nil || l <= 0 {
+			http.Error(w, "page_size must be a positive integer", http.StatusBadRequest)
+			return
+		}
+		pageSize = l
+	}
+	if _page != "" {
+		o, err := strconv.Atoi(_page)
+		if err != nil || o <= 0 {
+			http.Error(w, "page must be a positive integer", http.StatusBadRequest)
+			return
+		}
+		page = o
+	}
+	// Calculate paging offset
+	offset := pageSize * (page - 1)
+
+	// Parse time filter
+	_before := r.FormValue("before")
+	_after := r.FormValue("after")
+	before := 0 // Default limit
+	after := 0  // Default offset
+
+	if _before != "" {
+		l, err := strconv.Atoi(_before)
+		if err != nil || l <= 0 {
+			http.Error(w, "before must be a positive integer", http.StatusBadRequest)
+			return
+		}
+		before = l
+	}
+	if _after != "" {
+		o, err := strconv.Atoi(_after)
+		if err != nil || o <= 0 {
+			http.Error(w, "after must be a positive integer", http.StatusBadRequest)
+			return
+		}
+		after = o
 	}
 
 	// Fetch attributes related to this collection
@@ -252,6 +312,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var samples = []Sample{}
+	var totalCount int
 
 	if singleSample {
 		var sample = Sample{
@@ -298,10 +359,28 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-
 		// Fetch samples related to this collection
+
 		sampleQuery := "SELECT id, created_at, note FROM samples WHERE collection_id = ?"
-		sampleRows, err := DB.Query(sampleQuery, collectionId)
+
+		// If filtering, add args
+		if before != 0 {
+			sampleQuery += " AND created_at < ?"
+			sampleArgs = append(sampleArgs, before)
+		}
+		if _after != "" {
+			sampleQuery += " AND created_at > ?"
+			sampleArgs = append(sampleArgs, after)
+		}
+
+		// If paging, add args
+		sampleQuery += " ORDER BY created_at DESC"
+		if pageSize > 0 && page > 0 {
+			sampleQuery += " LIMIT ? OFFSET ?"
+			sampleArgs = append(sampleArgs, pageSize, offset)
+		}
+		// Do the query
+		sampleRows, err := DB.Query(sampleQuery, sampleArgs...)
 		if err != nil {
 			http.Error(w, "Failed to fetch samples", http.StatusInternalServerError)
 			log.Println("DB Fetch Error (Samples):", err)
@@ -316,7 +395,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// Fetch values associated with this sample
+			// Fetch values associated with each sample
 			valueQuery := "SELECT attribute_id, value FROM sample_attribute_values WHERE sample_id = ?"
 			valueRows, err := DB.Query(valueQuery, sample.SampleId)
 			if err != nil {
@@ -345,12 +424,31 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error iterating sample rows", http.StatusInternalServerError)
 			return
 		}
+
+		// Count total samples for pagination metadata
+		countQuery := strings.Replace(sampleQuery, "SELECT id, created_at, note FROM", "SELECT COUNT(*) FROM", 1)
+		if strings.Contains(countQuery, " LIMIT ? OFFSET ?") {
+			countQuery = strings.TrimSuffix(countQuery, " LIMIT ? OFFSET ?")
+			sampleArgs = sampleArgs[:len(sampleArgs)-2]
+		}
+
+		err = DB.QueryRow(countQuery, sampleArgs...).Scan(&totalCount)
+		if err != nil {
+			http.Error(w, "Failed to count total samples", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Return JSON response
 	response := FetchSamplesResponse{
 		Attributes: attributes,
 		Samples:    samples,
+		TotalCount: totalCount,
+		PageInfo: PageInfo{
+			Limit:       pageSize,
+			Offset:      offset,
+			HasNextPage: page != 0 && offset+pageSize < totalCount,
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -376,6 +474,15 @@ type Sample struct {
 type FetchSamplesResponse struct {
 	Attributes []Attribute `json:"attributes"`
 	Samples    []Sample    `json:"samples"`
+	TotalCount int         `json:"total_count,omitempty"`
+	PageInfo   PageInfo    `json:"page_info"`
+}
+
+// Pagination metadata
+type PageInfo struct {
+	Limit       int  `json:"limit"`
+	Offset      int  `json:"offset"`
+	HasNextPage bool `json:"has_next_page"`
 }
 
 /*

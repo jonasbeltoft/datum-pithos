@@ -291,9 +291,9 @@ func readUserByAccesToken(access_token string, include_password bool, include_se
 	err := DB.QueryRow(q, access_token).Scan(includes...)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, fmt.Errorf("readUser: no user found with token %d", access_token)
+			return User{}, fmt.Errorf("readUserByAccesToken: no user found with token %s", access_token)
 		}
-		return User{}, fmt.Errorf("readUser: %v", err)
+		return User{}, fmt.Errorf("readUserByAccesToken: %v", err)
 	}
 
 	// Execute the query and scan the result into the User object
@@ -341,7 +341,7 @@ func readUserByUsername(username string, include_password bool, include_session 
 	err := DB.QueryRow(q, username).Scan(includes...)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, fmt.Errorf("readUser: no user found with username %d", username)
+			return User{}, fmt.Errorf("readUserByUsername: no user found with username %s", username)
 		}
 		return User{}, fmt.Errorf("readUser: %v", err)
 	}
