@@ -82,6 +82,9 @@ func main() {
 
 		r.Get("/samples", fetchSamplesHandler)
 		r.Post("/samples", insertSampleHandler)
+		r.Delete("/samples", deleteSampleHandler)
+		r.Put("/samples", updateSampleHandler)
+		r.Post("/sample-values", insertOrUpdateSampleValueHandler)
 	})
 
 	fmt.Println("Starting server on :8000")

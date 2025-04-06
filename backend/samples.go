@@ -12,6 +12,183 @@ import (
 )
 
 /*
+Updates a single value in a sample
+
+Query params:
+
+	sample_id: int,
+	attribute_id: int,
+	value: string
+*/
+func insertOrUpdateSampleValueHandler(w http.ResponseWriter, r *http.Request) {
+	// Get data from query parameters
+	_attributeId := r.FormValue("attribute_id")
+	_sampleId := r.FormValue("sample_id")
+	value := r.FormValue("value")
+	if _attributeId == "" || _sampleId == "" {
+		http.Error(w, "attribute_id and sample_id is required", http.StatusBadRequest)
+		return
+	}
+
+	// Convert sample_id and attribute_id to int
+	sampleId, err := strconv.Atoi(_sampleId)
+	if err != nil {
+		http.Error(w, "sample_id must be a positive int", http.StatusBadRequest)
+		return
+	}
+	attributeId, err := strconv.Atoi(_attributeId)
+	if err != nil {
+		http.Error(w, "attribute_id must be a positive int", http.StatusBadRequest)
+		return
+	}
+
+	queryInsert := "INSERT INTO sample_attribute_values (sample_id, attribute_id, value) VALUES (?, ?, ?)"
+	result, err := DB.Exec(queryInsert, sampleId, attributeId, value)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed:") {
+			// If the sample already exists, update it instead
+			query := "UPDATE sample_attribute_values SET value = ? WHERE sample_id = ? AND attribute_id = ?"
+			update_result, err := DB.Exec(query, value, sampleId, attributeId)
+			if err != nil {
+				http.Error(w, "error when updating sample value in database", http.StatusInternalServerError)
+				return
+			}
+			rowsAffected, err := update_result.RowsAffected()
+			if err != nil || rowsAffected == 0 {
+				http.Error(w, "sample not found or no changes made", http.StatusNotFound)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "{\"status\": \"success\"}")
+			return
+
+		} else {
+			http.Error(w, "error when inserting sample value to database", http.StatusInternalServerError)
+			return
+		}
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		http.Error(w, "sample not found or no changes made", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "{\"status\": \"success\"}")
+}
+
+/*
+Updates a sample in the db
+
+Query params:
+
+	sample_id: int,
+	created_at: int, // UNIX timestamp in seconds
+	note: string,
+*/
+func updateSampleHandler(w http.ResponseWriter, r *http.Request) {
+	// Get data from query parameters
+	_sampleId := r.FormValue("sample_id")
+	_createdAt := r.FormValue("created_at")
+	note := r.FormValue("note")
+	if _sampleId == "" {
+		http.Error(w, "sample_id is required", http.StatusBadRequest)
+		return
+	}
+	if !strings.Contains(r.URL.String(), "note") && _createdAt == "" {
+		http.Error(w, "note or created_at is required", http.StatusBadRequest)
+		return
+	}
+
+	query := "UPDATE samples SET"
+	args := []interface{}{}
+
+	if strings.Contains(r.URL.String(), "note") {
+		query += " note = ?,"
+		args = append(args, note)
+	}
+	// Convert sample_id and created_at to int
+	var createdAt int64
+	if _createdAt != "" {
+		time, err := strconv.Atoi(_createdAt)
+		if err != nil {
+			http.Error(w, "created_at must be a positive int", http.StatusBadRequest)
+			return
+		}
+		createdAt = int64(time)
+		query += " created_at = ?,"
+		args = append(args, createdAt)
+	}
+	sampleId, err := strconv.Atoi(_sampleId)
+	if err != nil {
+		http.Error(w, "sample_id must be a positive int", http.StatusBadRequest)
+		return
+	}
+	args = append(args, sampleId)
+
+	// Update sample in the database
+	query = strings.TrimSuffix(query, ",") + " WHERE id = ?"
+	result, err := DB.Exec(query, args...)
+	if err != nil {
+		http.Error(w, "error when updating sample in database", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		http.Error(w, "value not found or no changes made", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "{\"status\": \"success\"}")
+}
+
+/*
+Deletes a sample from the db
+
+Query params:
+
+	sample_id: int
+*/
+func deleteSampleHandler(w http.ResponseWriter, r *http.Request) {
+	// Get data from query parameters
+	_sampleId := r.FormValue("sample_id")
+	if _sampleId == "" {
+		http.Error(w, "sample_id is required", http.StatusBadRequest)
+		return
+	}
+
+	// Convert sample_id to int
+	sampleId, err := strconv.Atoi(_sampleId)
+	if err != nil {
+		http.Error(w, "sample_id must be a positive int", http.StatusBadRequest)
+		return
+	}
+
+	query := "DELETE FROM samples WHERE id = ?"
+	result, err := DB.Exec(query, sampleId)
+	if err != nil {
+		http.Error(w, "error when deleting sample from database", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		http.Error(w, "sample not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "{\"status\": \"success\"}")
+}
+
+/*
 Gets one or more samples from db
 
 Query params:
