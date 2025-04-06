@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS samples (
     collection_id INTEGER NOT NULL,
     created_at INTEGER NOT NULL, -- Stores UNIX time at INSERT
     note TEXT,
-    FOREIGN KEY (collection_id) REFERENCES collections (id)
+    CONSTRAINT fk_collection FOREIGN KEY (collection_id) REFERENCES collections (id) ON DELETE CASCADE
 );
 
 -- Create table: sample_attributes
@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS sample_attributes (
     unit_id INTEGER, -- Nullable
     name TEXT NOT NULL,
     CONSTRAINT unique_name UNIQUE (collection_id, name),
-    FOREIGN KEY (collection_id) REFERENCES collections (id),
-    FOREIGN KEY (unit_id) REFERENCES units (id)
+    CONSTRAINT fk_collection FOREIGN KEY (collection_id) REFERENCES collections (id) ON DELETE CASCADE,
+    CONSTRAINT fk_unit FOREIGN KEY (unit_id) REFERENCES units (id)
 );
 
 -- Create table: sample_attribute_values
@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS sample_attribute_values (
     attribute_id INTEGER NOT NULL,
     value TEXT,
     PRIMARY KEY (sample_id, attribute_id),
-    FOREIGN KEY (sample_id) REFERENCES samples (id),
-    FOREIGN KEY (attribute_id) REFERENCES sample_attributes (id)
+    CONSTRAINT fk_sample FOREIGN KEY (sample_id) REFERENCES samples (id) ON DELETE CASCADE,
+    CONSTRAINT fk_attribute FOREIGN KEY (attribute_id) REFERENCES sample_attributes (id) ON DELETE CASCADE
 );
 
 -- Create table: roles
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS users (
     display_name TEXT,
     access_token TEXT,
     token_expiry_date INTEGER, -- UNIX time in seconds
-    FOREIGN KEY (role_id) REFERENCES roles (id)
+    CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles (id)
 );
 
 -- Create table: logs
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS logs (
     instance_user INTEGER NOT NULL, -- References users
     crud_action TEXT NOT NULL, -- Action performed (e.g., CREATE, READ, UPDATE, DELETE)
     value TEXT,
-    FOREIGN KEY (instance_user) REFERENCES users (id)
+    CONSTRAINT fk_user FOREIGN KEY (instance_user) REFERENCES users (id)
 );
 
 -- Initialize roles table only if empty
