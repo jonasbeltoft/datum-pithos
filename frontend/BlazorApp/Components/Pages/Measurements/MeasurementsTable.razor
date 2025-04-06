@@ -30,12 +30,16 @@ else
 						class="border-b transition-colors odd:bg-zinc-100/50 hover:bg-zinc-200 data-[state=selected]:bg-muted last-of-type:border-none">
 						@for (int j = 0; j < measurements.entries[i].measurements.Count(); j++)
 						{
+
+							int entry_index = i;
+							int value_index = j;
+
 							<td
 								class="max-w-[20ch] text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 								<input
 									class="m-2 p-2 w-[calc(100%-1rem)] ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
 									placeholder="..." type="text" value="@measurements.entries[i].measurements[j]"
-									@onchange="ValueChangedAsync">
+									@onchange="@((ChangeEventArgs args) => ValueChangedAsync(args, entry_index, value_index))">
 							</td>
 						}
 					</tr>
@@ -49,20 +53,96 @@ else
 	[Parameter]
 	public int? measurementId { get; set; }
 
+	[Parameter]
+	public EventCallback<bool> OnFetchSuccess { get; set; }
+
 	public MeasurementCollection? measurements { get; set; }
 	protected async override Task OnParametersSetAsync()
 	{
 		// FETCH THE INITIAL DATA
-		Console.WriteLine("Parameter set");
 	}
 
-	private async Task ValueChangedAsync(ChangeEventArgs args) // , int entry_index, int value_index
+	private async void ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index) //
 	{
+		Console.WriteLine("ValueChangedAsync: {0}", args.Value);
+		Console.WriteLine("Entry index: {0}", entry_index);
+		Console.WriteLine("Value index: {0}", value_index);
+		Console.WriteLine("Current value: {0}", measurements!.entries[entry_index].measurements[value_index]);
+
+		measurements!.entries[entry_index].measurements[value_index] = args.Value!.ToString();
+
 		for (int i = 0; i < measurements.entries.Count(); i++)
 		{
 			Console.WriteLine("[{0}]", string.Join(", ", measurements.entries[i].measurements));
 		}
 	}
 
+	protected override async Task OnInitializedAsync()
+	{
+
+		await FetchMeasurements();
+
+	}
+
+	private async Task FetchMeasurements()
+	{
+
+		measurements = new MeasurementCollection { };
+		// HTTP CALL
+		await Task.Delay(500);
+
+		// Define headers
+		var headers = new MeasurementHeader[]
+		{
+new MeasurementHeader { name = "Date", unit = "Time" },
+new MeasurementHeader { name = "Temperature", unit = "Celsius" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" },
+new MeasurementHeader { name = "Flow Rate", unit = "L/s" },
+new MeasurementHeader { name = "Voltage", unit = "V" },
+new MeasurementHeader { name = "Ph" },
+new MeasurementHeader { name = "Temperature", unit = "Celsius" },
+new MeasurementHeader { name = "Pressure", unit = "Pascal" },
+new MeasurementHeader { name = "Humidity", unit = "%" }
+		};
+
+		// Generate 50 entries with some missing values
+		var random = new Random();
+		var _measurements = new Measurement[5];
+		for (int i = 0; i < 5; i++)
+		{
+			// Create a row of measurements with potential "holes"
+			string[] row = new string[headers.Length];
+			for (int j = 0; j < headers.Length; j++)
+			{
+				// Randomly leave some entries empty
+				row[j] = random.Next(0, 100) > 30 // 70% chance to have a value
+				? random.Next(1, 100).ToString() // Random value
+				: ""; // Empty string to simulate "hole"
+			}
+			_measurements[i] = new Measurement { measurements = row };
+		}
+		_measurements = _measurements
+		.OrderByDescending(entry =>
+		{
+			int val = 0;
+			int.TryParse(entry.measurements[0], out val);
+			return val;
+		})
+		.ToArray();
+		// Create the MeasurementCollection
+		measurements = new MeasurementCollection
+		{
+			headers = headers,
+			entries = _measurements
+		};
+		@* for (int i = 0; i < _measurements.Count(); i++)
+		{
+			Console.WriteLine("[{0}]", string.Join(", ", _measurements[i].measurements));
+		} *@
+
+		// Notify parent component of success
+		await OnFetchSuccess.InvokeAsync(true);
+	}
 
 }
