@@ -1,4 +1,4 @@
-.PHONY: up backend down restart logs
+.PHONY: up backend frontend down restart logs
 
 up:
 	docker compose up --detach --remove-orphans --build
@@ -6,6 +6,9 @@ up:
 
 backend:
 	docker compose up --remove-orphans --build
+
+frontend:
+	dotnet watch --project .\frontend\BlazorApp\ --no-hot-reload
 
 down:
 	docker compose down

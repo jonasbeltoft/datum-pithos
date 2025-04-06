@@ -12,14 +12,11 @@
 <EditForm Model="@Model" OnValidSubmit="@CreateCollection" FormName="CreateCollectionForm">
 	<DataAnnotationsValidator />
 
-	<label class="block mb-2 font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Navn
-		på
-		samling</label>
 	<div class="flex flex-row gap-2">
 
 		<InputText @bind-Value="@Model.Name"
 			class="mb-2 ring-zinc-900 focus:outline-none inline-flex h-10 w-80 rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-			placeholder="Samling" />
+			placeholder="Navn" />
 		<button
 			class="inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-zinc-900 text-white hover:bg-zinc-900/90 h-10 px-4 py-2"
 			type="submit">Opret</button>
@@ -33,8 +30,11 @@
 			</svg>
 		}
 	</div>
+	<InputText @bind-Value="@Model.Description"
+		class="mb-2 ring-zinc-900 focus:outline-none inline-flex h-10 w-80 rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+		placeholder="Beskrivelse" />
 	<ValidationMessage For="@(() => Model.Name)" class="text-red-500 text-sm font-medium leading-none mb-2" />
-	<span class="text-red-500 text-sm font-medium leading-none block">@errorMessage</span>
+	<span class="text-red-500 text-sm font-medium leading-none block capitalize">@errorMessage</span>
 </EditForm>
 
 @code {
@@ -44,18 +44,42 @@
 	private string? errorMessage;
 	private bool success = false;
 
-	public Task CreateCollection()
+	[Inject]
+	public MeasurementService MeasurementService { get; set; } = default!;
+
+	[CascadingParameter]
+	public MeasurementsLayout? _Parent { get; set; }
+
+	public async Task CreateCollection()
 	{
-		errorMessage = "";
-		success = true;
-		return Task.CompletedTask;
+
+		if (string.IsNullOrEmpty(Model.Name))
+		{
+			errorMessage = "Navn er påkrævet";
+			return;
+		}
+
+		var (_success, err) = await MeasurementService.CreateMeasurementCollectionAsync(Model.Name, Model.Description);
+		errorMessage = err;
+		success = _success;
+		StateHasChanged();
+		if (success)
+		{
+			_Parent?.RefreshState();
+		}
 	}
 
 	public class CreateCollectionModel
 	{
-		[JsonPropertyName("collection_name")]
+		[JsonPropertyName("name")]
 		[Required(AllowEmptyStrings = false, ErrorMessage = "Navn er påkrævet")]
 		public string? Name
+		{
+			get; set;
+		}
+
+		[JsonPropertyName("description")]
+		public string? Description
 		{
 			get; set;
 		}

@@ -76,6 +76,7 @@ func main() {
 
 		r.Get("/collections", fetchCollectionsHandler)
 		r.Post("/collections", insertCollectionHandler)
+		r.Delete("/collections", deleteCollectionHandler)
 
 		r.Post("/attributes", insertAttributesHandler)
 		r.Delete("/attributes", deleteAttributesHandler)

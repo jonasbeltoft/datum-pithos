@@ -10,6 +10,43 @@ import (
 )
 
 /*
+Deletes a collection from the collections table
+
+Query params:
+
+	collection_id: int
+*/
+func deleteCollectionHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse request
+	_collectionId := r.FormValue("collection_id")
+
+	// Validate input
+	collectionId, err := strconv.Atoi(_collectionId)
+	if err != nil {
+		http.Error(w, "collection_id must be a positive int", http.StatusBadRequest)
+		return
+	}
+
+	// Delete collection from database
+	query := "DELETE FROM collections WHERE id = ?"
+	result, err := DB.Exec(query, collectionId)
+	if err != nil {
+		http.Error(w, "failed to delete collection", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if any rows were affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		http.Error(w, "collection not found", http.StatusNotFound)
+		return
+	}
+
+	// Respond with success
+	w.WriteHeader(http.StatusOK)
+}
+
+/*
 Gets one or more collections from db
 
 Query params:
@@ -61,7 +98,7 @@ func fetchCollectionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// Get from DB
 		collection := Collection{
-			Id: id,
+			Id: &id,
 		}
 		err = DB.QueryRow("SELECT name, description FROM collections WHERE id = ?", id).Scan(&collection.Name, &collection.Description)
 		if err != nil {
@@ -109,6 +146,10 @@ func insertCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Name is required", http.StatusBadRequest)
 		return
 	}
+	if collection.Description == nil {
+		collection.Description = new(string)
+		*collection.Description = ""
+	}
 
 	// Insert into database
 	query := "INSERT INTO collections (name, description) VALUES (?, ?)"
@@ -137,7 +178,7 @@ func insertCollectionHandler(w http.ResponseWriter, r *http.Request) {
 
 // Collection represents the structure of the collection table
 type Collection struct {
-	Id          int    `json:"id,omitempty"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Id          *int    `json:"id,omitempty"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
 }

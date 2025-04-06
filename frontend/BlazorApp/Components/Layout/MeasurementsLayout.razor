@@ -1,27 +1,30 @@
 ﻿@inherits LayoutComponentBase
 @layout MainLayout
 
-<PageTitle>Measurements</PageTitle>
+<PageTitle>Målinger</PageTitle>
 
 <div class="flex flex-grow flex-row  max-w-[calc(100%-1rem)]">
     <div class="flex flex-col justify-between min-w-64 border-r border-zinc-200 bg-white">
         <nav class="pr-4 py-3 flex flex-col gap-2 font-medium">
-            <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(1)"
-                Match="NavLinkMatch.All">
-                Vand samling 1
-            </NavLink>
-            <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(2)"
-                Match="NavLinkMatch.All">
-                Vand samling 2
-            </NavLink>
-            <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(3)"
-                Match="NavLinkMatch.All">
-                Vand samling 3
-            </NavLink>
-            <NavLink class="[&.active]:bg-zinc-100 block p-2 rounded-lg hover:bg-zinc-100" href="@GetLink(4)"
-                Match="NavLinkMatch.All">
-                Vand samling 4
-            </NavLink>
+            @foreach (var collection in Collections)
+            {
+                <div
+                    class="group inline-flex gap-2 justify-between items-center [&.active]:bg-zinc-100 p-2 rounded-lg hover:bg-zinc-100">
+                    <NavLink class="grow" href="@GetLink(collection.Id)" Match="NavLinkMatch.All">
+                        @collection.Name
+                    </NavLink>
+                    <button @onclick="async () => await DeleteCollection(collection.Id)"
+                        class="w-5 h-5 group-hover:block hidden relative *:hover:fill-white hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 hover:before:rounded-md hover:before:-z-0 hover:before:p-2 hover:before:m-[-0.5rem]">
+                        <svg class="relative fill-red-500 z-10" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 16 16">
+                            <path
+                                d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                            <path
+                                d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                        </svg>
+                    </button>
+                </div>
+            }
         </nav>
         <div class="pr-4 py-3 font-semibold">
             <NavLink
@@ -32,14 +35,51 @@
         </div>
     </div>
 
-    <main class="mt-4 ml-6 mr-2 flex-grow max-w-[calc(100%-17rem)]">
-        @Body
-    </main>
+    <CascadingValue Value="this">
+        <main class="mt-4 ml-6 mr-2 flex-grow max-w-[calc(100%-17rem)]">
+            @Body
+        </main>
+    </CascadingValue>
 </div>
 
 @code {
+
+    [Inject]
+    public MeasurementService MeasurementService { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+
+    public Collection[] Collections { get; set; } = Array.Empty<Collection>();
+
+    private async Task DeleteCollection(int id)
+    {
+        var result = await MeasurementService.DeleteCollectionAsync(id);
+        if (result)
+        {
+            Collections = Collections.Where(c => c.Id != id).ToArray();
+            StateHasChanged();
+            if (Navigation.Uri.Contains($"/measurements/{id}"))
+            {
+                Navigation.NavigateTo("/measurements");
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Collections = await MeasurementService.FetchCollectionsAsync();
+    }
+
     private string GetLink(int _id)
     {
         return $"/measurements/{_id}";
+    }
+    public async void RefreshState()
+    {
+        Collections = await MeasurementService.FetchCollectionsAsync();
+        StateHasChanged();
+        Console.WriteLine("State has changed in MeasurementsLayout");
     }
 }

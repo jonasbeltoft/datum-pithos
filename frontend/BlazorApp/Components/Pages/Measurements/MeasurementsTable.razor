@@ -27,7 +27,7 @@ else
 				@for (int i = 0; i < measurements.entries.Count(); i++)
 				{
 					<tr
-						class="border-b transition-colors odd:bg-zinc-100/50 hover:bg-zinc-200 data-[state=selected]:bg-muted last-of-type:border-none">
+						class="border-b transition-colors odd:bg-zinc-100/50 hover:bg-zinc-200 hover:border-zinc-200 *:hover:border-zinc-50 data-[state=selected]:bg-muted last-of-type:border-none">
 						@for (int j = 0; j < measurements.entries[i].measurements.Count(); j++)
 						{
 
@@ -64,11 +64,6 @@ else
 
 	private async void ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index) //
 	{
-		Console.WriteLine("ValueChangedAsync: {0}", args.Value);
-		Console.WriteLine("Entry index: {0}", entry_index);
-		Console.WriteLine("Value index: {0}", value_index);
-		Console.WriteLine("Current value: {0}", measurements!.entries[entry_index].measurements[value_index]);
-
 		measurements!.entries[entry_index].measurements[value_index] = args.Value!.ToString();
 
 		for (int i = 0; i < measurements.entries.Count(); i++)

@@ -7,9 +7,9 @@
 	<div class="flex flex-col flex-grow h-1 max-w-full">
 
 		<div class="flex flex-col self-start">
-			<h1 class="text-3xl font-bold mb-1">Samling @MeasurementId</h1>
+			<h1 class="text-3xl font-bold mb-1">@Collection.Name</h1>
 
-			<p class="mb-3 text-sm text-zinc-500">This component demonstrates showing data.</p>
+			<p class="mb-3 text-sm text-zinc-500">@Collection.Description</p>
 		</div>
 		<input
 			class="mb-2 ring-zinc-900 focus:outline-none inline-flex h-10 w-96 rounded-md border border-input bg-zinc-200 px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 md:text-sm"
@@ -25,6 +25,9 @@
 @code {
 	[Parameter]
 	public string? MeasurementId { get; set; }
+
+	public Collection Collection { get; set; } = new Collection();
+
 	private string? SearchString { get; set; }
 
 	public int MeasurementIdInt = -1;
@@ -33,28 +36,33 @@
 	[Inject]
 	private NavigationManager Navigation { get; set; } = default!;
 
+	[Inject]
+	private MeasurementService MeasurementService { get; set; } = default!;
+
 	public void EnableSearch(bool success)
 	{
 		isSearchDisabled = !success;
 	}
-
 	protected async override Task OnParametersSetAsync()
 	{
-		if (!int.TryParse(MeasurementId, out MeasurementIdInt))
+		if (!int.TryParse(MeasurementId, out MeasurementIdInt) ||
+		MeasurementService.GetCollectionIds().Contains(MeasurementIdInt) == false)
 		{
 			Navigation.NavigateTo("/measurements");
 			return;
 		}
+		Collection = MeasurementService.GetCollectionById(MeasurementIdInt);
 	}
 
 	protected override async Task OnInitializedAsync()
 	{
-		if (!int.TryParse(MeasurementId, out MeasurementIdInt))
+
+		if (!int.TryParse(MeasurementId, out MeasurementIdInt) ||
+		MeasurementService.GetCollectionIds().Contains(MeasurementIdInt) == false)
 		{
 			Navigation.NavigateTo("/measurements");
 			return;
 		}
-		//await FetchMeasurements();
-
+		Collection = MeasurementService.GetCollectionById(MeasurementIdInt);
 	}
 }
