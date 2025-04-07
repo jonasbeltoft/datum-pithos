@@ -30,6 +30,11 @@ func insertOrUpdateSampleValueHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(value) > 32 {
+		http.Error(w, "value must be at most 32 characters", http.StatusBadRequest)
+		return
+	}
+
 	// Convert sample_id and attribute_id to int
 	sampleId, err := strconv.Atoi(_sampleId)
 	if err != nil {
@@ -314,7 +319,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer attrRows.Close()
 
-	var attributes = []Attribute{}
+	var attributes = make([]Attribute, 0)
 	for attrRows.Next() {
 		var attr = Attribute{}
 		if err := attrRows.Scan(&attr.AttributeId, &attr.Name, &attr.UnitId); err != nil {
@@ -329,7 +334,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var samples = []Sample{}
+	var samples = make([]Sample, 0)
 	var totalCount int
 
 	if singleSample {
@@ -358,7 +363,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer valueRows.Close()
 
-		var values []SampleValue
+		var values = make([]SampleValue, 0)
 		for valueRows.Next() {
 			var val SampleValue
 			if err := valueRows.Scan(&val.AttributeId, &val.Value); err != nil {
@@ -423,7 +428,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			defer valueRows.Close()
 
-			var values []SampleValue
+			var values = make([]SampleValue, 0)
 			for valueRows.Next() {
 				var val SampleValue
 				if err := valueRows.Scan(&val.AttributeId, &val.Value); err != nil {
@@ -574,30 +579,32 @@ func insertSampleHandler(w http.ResponseWriter, r *http.Request) {
 	_id := int(sample_id)
 	sample.SampleId = &_id
 
-	// Generate insert query and array of values
-	query := "INSERT INTO sample_attribute_values (sample_id, attribute_id, value) VALUES "
-	vals := []interface{}{}
+	if len(sample.Values) != 0 {
+		// Generate insert query and array of values
+		query := "INSERT INTO sample_attribute_values (sample_id, attribute_id, value) VALUES "
+		vals := []interface{}{}
 
-	for _, row := range sample.Values {
-		query += "(?, ?, ?),"
-		vals = append(vals, *sample.SampleId, row.AttributeId, row.Value)
-	}
-	query = strings.TrimSuffix(query, ",")
+		for _, row := range sample.Values {
+			query += "(?, ?, ?),"
+			vals = append(vals, *sample.SampleId, row.AttributeId, row.Value)
+		}
+		query = strings.TrimSuffix(query, ",")
 
-	// Attempt insert of values
-	_, err = tx.Exec(query, vals...)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+		// Attempt insert of values
+		_, err = tx.Exec(query, vals...)
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				http.Error(w, "error inserting to database", http.StatusInternalServerError)
+				log.Panic(err, rollbackErr)
+				return
+			}
+			if strings.Contains(err.Error(), "UNIQUE constraint failed:") {
+				http.Error(w, "sample already exists", http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "error inserting to database", http.StatusInternalServerError)
-			log.Panic(err, rollbackErr)
 			return
 		}
-		if strings.Contains(err.Error(), "UNIQUE constraint failed:") {
-			http.Error(w, "sample already exists", http.StatusBadRequest)
-			return
-		}
-		http.Error(w, "error inserting to database", http.StatusInternalServerError)
-		return
 	}
 
 	// Commit the insert

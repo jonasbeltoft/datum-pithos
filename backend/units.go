@@ -12,33 +12,24 @@ import (
 /*
 Inserts a new unit into the units table
 
-Body:
+Query params:
 
-	{
-		name: string
-	}
+	name: string
 */
 func insertUnitHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the name of the unit
-	var body InsertUnitBody
+	name := r.FormValue("name")
 
-	// Read and decode the JSON body
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	if body.Name == "" {
+	if name == "" {
 		http.Error(w, "name is required", http.StatusBadRequest)
 		return
-	} else if len(body.Name) > 32 {
+	} else if len(name) > 32 {
 		http.Error(w, "name must be at most 32 characters", http.StatusBadRequest)
 		return
 	}
 
 	query := "INSERT INTO units (name) VALUES (?)"
-	result, err := DB.Exec(query, body.Name)
+	result, err := DB.Exec(query, name)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed: units.name") {
 			http.Error(w, "unit already exists", http.StatusBadRequest)
@@ -57,10 +48,6 @@ func insertUnitHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "{\"id\":  %d}", id)
-}
-
-type InsertUnitBody struct {
-	Name string `json:"name"`
 }
 
 /*
