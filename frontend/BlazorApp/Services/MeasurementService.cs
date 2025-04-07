@@ -7,7 +7,7 @@ namespace BlazorApp.Services;
 public class MeasurementService
 {
 	private readonly HttpClient httpClient;
-	private Collection[] collections = Array.Empty<Collection>();
+	public Collection[] collections = Array.Empty<Collection>();
 
 	public MeasurementService(HttpClient _httpClient)
 	{

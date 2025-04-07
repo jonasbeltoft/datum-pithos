@@ -52,6 +52,8 @@ else
 @code {
 	[Parameter]
 	public int? measurementId { get; set; }
+	private int? lastMeasurementId;
+
 
 	[Parameter]
 	public EventCallback<bool> OnFetchSuccess { get; set; }
@@ -59,24 +61,20 @@ else
 	public MeasurementCollection? measurements { get; set; }
 	protected async override Task OnParametersSetAsync()
 	{
-		// FETCH THE INITIAL DATA
+		// FETCH THE INITIAL DATA only if id changes
+		if (measurementId.HasValue && measurementId != lastMeasurementId)
+		{
+			lastMeasurementId = measurementId;
+			await FetchMeasurements();
+			StateHasChanged();
+		}
 	}
 
 	private async void ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index) //
 	{
-		measurements!.entries[entry_index].measurements[value_index] = args.Value!.ToString();
+		measurements!.entries[entry_index].measurements[value_index] = args.Value?.ToString() ?? "";
 
-		for (int i = 0; i < measurements.entries.Count(); i++)
-		{
-			Console.WriteLine("[{0}]", string.Join(", ", measurements.entries[i].measurements));
-		}
-	}
-
-	protected override async Task OnInitializedAsync()
-	{
-
-		await FetchMeasurements();
-
+		// UPDATE VALUE
 	}
 
 	private async Task FetchMeasurements()
