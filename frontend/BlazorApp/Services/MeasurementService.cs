@@ -1,7 +1,6 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorApp.Services;
 
@@ -108,6 +107,8 @@ public class MeasurementService
 			{
 				Console.WriteLine($"Failed to delete collection: {response.StatusCode}");
 			}
+			// Delete the collection from the local array
+			collections = collections.Where(c => c.Id != id).ToArray();
 			return true;
 		}
 		catch (Exception ex)

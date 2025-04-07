@@ -9,11 +9,11 @@
             @foreach (var collection in Collections)
             {
                 <div
-                    class="group inline-flex gap-2 justify-between items-center [&.active]:bg-zinc-100 p-2 rounded-lg hover:bg-zinc-100">
-                    <NavLink class="grow" href="@GetLink(collection.Id)" Match="NavLinkMatch.All">
-                        @collection.Name
+                    class="group inline-flex gap-2 justify-between items-center has-[.active]:bg-zinc-100 p-2 rounded-lg hover:bg-zinc-100">
+                    <NavLink class="grow" href="@GetLink(collection.Value.Id)" Match="NavLinkMatch.All">
+                        @collection.Value.Name
                     </NavLink>
-                    <button @onclick="async () => await DeleteCollection(collection.Id)"
+                    <button @onclick="() => ShowModal(collection.Value.Id)"
                         class="w-5 h-5 group-hover:block hidden relative *:hover:fill-white hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 hover:before:rounded-md hover:before:-z-0 hover:before:p-2 hover:before:m-[-0.5rem]">
                         <svg class="relative fill-red-500 z-10" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                             viewBox="0 0 16 16">
@@ -24,6 +24,7 @@
                         </svg>
                     </button>
                 </div>
+
             }
         </nav>
         <div class="pr-4 py-3 font-semibold">
@@ -41,6 +42,30 @@
         </main>
     </CascadingValue>
 </div>
+@if (ModalVisible)
+{
+    <div class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        style="pointer-events: auto;"></div>
+    <div
+        class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+        <div class="flex flex-col space-y-2 text-center sm:text-left">
+            <h2 id="radix-:r35:" class="text-lg font-semibold">Er du sikker på active du vil slette
+                @Collections[ModalCollectionId].Name</h2>
+            <p id="radix-:r36:" class="text-sm text-muted-foreground">Dette kan ikke fortrydes. Dette vil fjerne
+                alt data relateret til denne samling, samt alle målinger.</p>
+        </div>
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+            @if (!string.IsNullOrEmpty(deleteErr))
+            {
+                <div class="text-red-500 text-sm font-semibold">@deleteErr</div>
+            }
+            <button type="button" @onclick="async () => HideModal()"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">Afvis</button>
+            <button type="button" @onclick="async () => await DeleteCollection(Collections[ModalCollectionId].Id)"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2">Bekræft</button>
+        </div>
+    </div>
+}
 
 @code {
 
@@ -50,26 +75,46 @@
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
+    public Dictionary<int, Collection> Collections { get; set; } = new();
 
-    public Collection[] Collections { get; set; } = Array.Empty<Collection>();
+    private bool ModalVisible { get; set; } = false;
+    private int ModalCollectionId { get; set; } = 0;
+    private string deleteErr { get; set; } = "";
+
+    private void ShowModal(int id)
+    {
+        ModalCollectionId = id;
+        ModalVisible = true;
+    }
+    private void HideModal()
+    {
+        ModalVisible = false;
+        deleteErr = string.Empty;
+    }
 
     private async Task DeleteCollection(int id)
     {
         var result = await MeasurementService.DeleteCollectionAsync(id);
         if (result)
         {
-            Collections = Collections.Where(c => c.Id != id).ToArray();
+            HideModal();
+            Collections.Remove(id);
             StateHasChanged();
             if (Navigation.Uri.Contains($"/measurements/{id}"))
             {
                 Navigation.NavigateTo("/measurements");
             }
         }
+        else
+        {
+            deleteErr = "Der skete en fejl under sletning af samlingen. Prøv venligst igen.";
+        }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        Collections = await MeasurementService.FetchCollectionsAsync();
+        var result = await MeasurementService.FetchCollectionsAsync();
+        Collections = result.ToDictionary(c => c.Id, c => c);
     }
 
     private string GetLink(int _id)
@@ -78,8 +123,8 @@
     }
     public async void RefreshState()
     {
-        Collections = await MeasurementService.FetchCollectionsAsync();
-        StateHasChanged();
+        var result = await MeasurementService.FetchCollectionsAsync();
+        Collections = result.ToDictionary(c => c.Id, c => c); StateHasChanged();
         Console.WriteLine("State has changed in MeasurementsLayout");
     }
 }
