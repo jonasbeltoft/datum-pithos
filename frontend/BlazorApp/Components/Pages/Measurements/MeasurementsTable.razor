@@ -36,6 +36,12 @@ else
 							<span class="text-sm font-normal text-zinc-500">@entry.unit</span>
 						</th>
 					}
+					<th class="p-4 border-r last-of-type:border-none">
+						<span class="font-semibold mr-1">Note</span>
+					</th>
+					<th class="p-4 border-r last-of-type:border-none">
+						<span class="font-semibold mr-1">...</span>
+					</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -48,8 +54,8 @@ else
 							class="max-w-[21ch] text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 							<input
 								class="m-2 p-2 w-[calc(100%-1rem)] ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
-								placeholder="..." type="datetime-local"
-								value="@DateTimeOffset.FromUnixTimeSeconds(measurements.entries[i].CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")"
+								placeholder="-" type="datetime-local"
+								value="@DateTimeOffset.FromUnixTimeSeconds(measurements.entries[entry_index].CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")"
 								@onchange="@((ChangeEventArgs args) => TimeValueChangedAsync(args, entry_index))">
 						</td>
 						@for (int j = 0; j < measurements.headers.Count(); j++)
@@ -57,19 +63,63 @@ else
 
 							int value_index = j;
 							<td
-								class="max-w-[15ch] w-fit text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
+								class="max-w-[15ch] w-max text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 								<input
-									class="m-2 p-2 w-[calc(100%-1rem)] ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30
-																																											@(inputErrors.TryGetValue((entry_index, value_index), out var err) && err ? "ring-2 !ring-red-500" : "")"
-									placeholder="..." type="text" value="@GetValue(entry_index, value_index)"
+									class="m-2 p-2 min-w-min text-ellipsis ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30
+																																																																																																																																																																																																													@(inputErrors.TryGetValue((entry_index, value_index), out var err) && err ? "ring-2 !ring-red-500" : "")"
+									placeholder="-" size="5" type="text" value="@GetValue(entry_index, value_index)"
 									@onchange="@((ChangeEventArgs args) => ValueChangedAsync(args, entry_index, value_index))" />
 							</td>
 						}
+						<td
+							class="max-w-[25ch] text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
+							<input
+								class="m-2 p-2 min-w-min text-ellipsis ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
+								placeholder="-" size="15" type="text" value="@measurements.entries[entry_index].Note"
+								@onchange="@((ChangeEventArgs args) => NoteValueChangedAsync(args, entry_index))">
+						</td>
+						<td class="border-r last-of-type:border-none">
+							<div class="grid justify-center">
+								<button @onclick="() => ShowDeleteModal(measurements.entries[entry_index].Id)"
+									class="w-5 h-5 block relative *:hover:fill-white hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 hover:before:rounded-md hover:before:-z-0 hover:before:p-2 hover:before:m-[-0.5rem]">
+									<svg class="relative fill-red-500 z-10" xmlns="http://www.w3.org/2000/svg" width="20"
+										height="20" viewBox="0 0 16 16">
+										<path
+											d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+										<path
+											d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+									</svg>
+								</button>
+							</div>
+						</td>
 					</tr>
 				}
 			</tbody>
 		</table>
 	</div>
+	@if (DeleteModalVisible)
+	{
+		<div class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+			style="pointer-events: auto;"></div>
+		<div
+			class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+			<div class="flex flex-col space-y-2 text-center sm:text-left">
+				<h2 id="radix-:r35:" class="text-lg font-semibold">Er du sikker på active du vil slette denne måling?</h2>
+				<p id="radix-:r36:" class="text-sm text-muted-foreground">Dette kan ikke fortrydes. Dette vil fjerne
+					alt data relateret til denne måling.</p>
+			</div>
+			<div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+				@if (!string.IsNullOrEmpty(deleteErr))
+				{
+					<div class="text-red-500 text-sm font-semibold">@deleteErr</div>
+				}
+				<button type="button" @onclick="async () => HideDeleteModal()"
+					class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">Afvis</button>
+				<button type="button" @onclick="async () => await DeleteMeasurement(DeleteModalSampleId)"
+					class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2">Bekræft</button>
+			</div>
+		</div>
+	}
 }
 
 @code {
@@ -87,6 +137,36 @@ else
 	Dictionary<(int entryIndex, int valueIndex), bool> inputErrors = new();
 
 	public string? globalErr = null;
+
+	private int DeleteModalSampleId = 0;
+	private bool DeleteModalVisible = false;
+	private string? deleteErr = null;
+
+	private void ShowDeleteModal(int id)
+	{
+		DeleteModalSampleId = id;
+		DeleteModalVisible = true;
+	}
+	private void HideDeleteModal()
+	{
+		DeleteModalVisible = false;
+		deleteErr = string.Empty;
+	}
+
+	private async Task DeleteMeasurement(int id)
+	{
+		var result = await MeasurementService.DeleteMeasurementAsync(id);
+		if (result)
+		{
+			HideDeleteModal();
+			measurements!.entries.RemoveAll(e => e.Id == id);
+			StateHasChanged();
+		}
+		else
+		{
+			deleteErr = "Der skete en fejl under sletning af målingen. Prøv venligst igen.";
+		}
+	}
 
 	public string GetValue(int entry_index, int value_index)
 	{
@@ -118,26 +198,56 @@ else
 		}
 	}
 
+	private async void NoteValueChangedAsync(ChangeEventArgs args, int entry_index) //
+	{
+		var value = args.Value?.ToString() ?? "";
+
+		// UPDATE VALUE
+		var result = await MeasurementService.UpdateMeasurementAsync(measurements!.entries[entry_index].Id, null,
+		value);
+
+		if (!result)
+		{
+			globalErr = "Der skete en fejl under opdatering af målinger.";
+		}
+		else
+		{
+			measurements!.entries[entry_index].Note = value;
+			globalErr = null;
+		}
+		await RefreshParent.InvokeAsync();
+		StateHasChanged();
+	}
 	private async void TimeValueChangedAsync(ChangeEventArgs args, int entry_index) //
 	{
 		var format = "yyyy-MM-ddTHH:mm:ss";
 		try
 		{
-			Console.WriteLine(args.Value);
 			var time = DateTimeOffset.ParseExact(args.Value?.ToString() ?? "", format, null).ToUnixTimeSeconds();
-			measurements!.entries[entry_index].CreatedAt = time;
 
 			// UPDATE VALUE
+			var result = await MeasurementService.UpdateMeasurementAsync(measurements!.entries[entry_index].Id, time, null);
 
+			if (!result)
+			{
+				globalErr = "Der skete en fejl under opdatering af målinger.";
+			}
+			else
+			{
+				measurements!.entries[entry_index].CreatedAt = time;
+				globalErr = null;
+			}
 		}
 		catch (FormatException)
 		{
 			// Handle invalid format
 
 			Console.WriteLine($"Invalid date format. Expected format: {format}");
-			return;
+			globalErr = "Der skete en fejl under opdatering af målinger.";
 		}
 
+		await RefreshParent.InvokeAsync();
+		StateHasChanged();
 	}
 
 	private async void ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index) //
@@ -151,7 +261,7 @@ else
 		}
 
 		// UPDATE VALUE
-		var result = await MeasurementService.UpdateMeasurementAsync(measurements!.entries[entry_index].Id,
+		var result = await MeasurementService.UpdateMeasurementValueAsync(measurements!.entries[entry_index].Id,
 		attrId, args.Value?.ToString() ?? "");
 		inputErrors[(entry_index, value_index)] = !result;
 		if (inputErrors.Any(e => e.Value))

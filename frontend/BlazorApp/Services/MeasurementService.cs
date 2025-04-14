@@ -82,9 +82,74 @@ public class MeasurementService
 	}
 
 	// <summary>
+	// Deletes a measurement by its ID.
+	// </summary>
+	public async Task<bool> DeleteMeasurementAsync(int sampleId)
+	{
+		try
+		{
+			HttpResponseMessage response = await httpClient.DeleteAsync($"samples?sample_id={sampleId}");
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to delete measurement: {response.StatusCode}");
+				return false;
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error deleting measurement: {ex.Message}");
+			return false;
+		}
+	}
+
+	// <summary>
+	// Updates a measurement/sample.
+	// </summary>
+	public async Task<bool> UpdateMeasurementAsync(int sampleId, long? created_at, string? note)
+	{
+		// Query params:
+		//	 sample_id: int,
+		//	 created_at: int, // UNIX timestamp in seconds
+		//	 note: string,
+		if (created_at == null && note == null)
+		{
+			return false;
+		}
+
+		string qparams = "";
+		if (created_at != null)
+		{
+			qparams += $"&created_at={created_at}";
+		}
+		if (note != null)
+		{
+			qparams += $"&note={Uri.EscapeDataString(note)}";
+		}
+
+		try
+		{
+			HttpResponseMessage response = await httpClient.PutAsync($"samples?sample_id={sampleId}{qparams}", new StringContent(""));
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to update measurement: {response.StatusCode} {response.Content.ReadAsStringAsync().Result}");
+				return false;
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error updating measurement: {ex.Message}");
+			return false;
+		}
+	}
+
+	// <summary>
 	// Updates a value in a measurement.
 	// </summary>
-	public async Task<bool> UpdateMeasurementAsync(int sampleId, int attributeId, string value)
+	public async Task<bool> UpdateMeasurementValueAsync(int sampleId, int attributeId, string value)
 	{
 		try
 		{
@@ -371,7 +436,8 @@ public class Measurement
 	[JsonPropertyName("sample_id")]
 	public int Id { get; set; }
 
-	public string note { get; set; } = string.Empty;
+	[JsonPropertyName("note")]
+	public string Note { get; set; } = string.Empty;
 
 	[JsonPropertyName("created_at")]
 	public long CreatedAt { get; set; }
