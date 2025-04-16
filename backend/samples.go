@@ -241,9 +241,9 @@ Result:
 */
 func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 	// Get data from query parameters
-	collectionId := r.FormValue("collection_id")
+	_collectionId := r.FormValue("collection_id")
 	_sampleId := r.FormValue("sample_id")
-	if collectionId == "" && _sampleId == "" {
+	if _collectionId == "" && _sampleId == "" {
 		http.Error(w, "collection_id or sample_id is required", http.StatusBadRequest)
 		return
 	}
@@ -257,6 +257,15 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		singleSample = true
 		sampleId = id
+	}
+	var collectionId int
+	if _collectionId != "" {
+		id, err := strconv.Atoi(_collectionId)
+		if err != nil {
+			http.Error(w, "collection_id must be a positive int", http.StatusBadRequest)
+			return
+		}
+		collectionId = id
 	}
 
 	// Parse pagination params
@@ -313,8 +322,8 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 	attributeQuery := "SELECT id, name, unit_id FROM sample_attributes WHERE collection_id = ? ORDER BY id"
 	attrRows, err := DB.Query(attributeQuery, collectionId)
 	if err != nil {
+		log.Println("DB Fetch Error:", err)
 		http.Error(w, "Failed to fetch attributes", http.StatusInternalServerError)
-		log.Println("DB Fetch Error (Attributes):", err)
 		return
 	}
 	defer attrRows.Close()

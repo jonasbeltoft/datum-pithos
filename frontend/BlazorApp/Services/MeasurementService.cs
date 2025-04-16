@@ -12,6 +12,8 @@ public class MeasurementService
 	public Collection[] collections = Array.Empty<Collection>();
 	public Unit[] units = Array.Empty<Unit>();
 
+	public bool IsLoaded { get; set; } = false;
+
 	public MeasurementService(HttpClient _httpClient)
 	{
 		httpClient = _httpClient;
@@ -209,17 +211,20 @@ public class MeasurementService
 			if (!response.IsSuccessStatusCode)
 			{
 				Console.WriteLine($"Failed to fetch collections: {response.StatusCode}");
+				IsLoaded = true;
 				return Array.Empty<Collection>();
 			}
 
 			string jsonString = await response.Content.ReadAsStringAsync();
 
 			collections = JsonSerializer.Deserialize<Collection[]>(jsonString) ?? Array.Empty<Collection>();
+			IsLoaded = true;
 			return collections;
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine($"Error fetching collections: {ex.Message}");
+			IsLoaded = true;
 			return Array.Empty<Collection>();
 		}
 	}
@@ -350,6 +355,30 @@ public class MeasurementService
 	}
 
 	// <summary>
+	// Deletes an attribute (column) from a collection.
+	// </summary>
+	public async Task<bool> DeleteAttributeAsync(int attributeId)
+	{
+		// attribute_id: int
+		try
+		{
+			HttpResponseMessage response = await httpClient.DeleteAsync($"attributes?attribute_id={attributeId}");
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to delete attribute: {response.StatusCode}");
+				return false;
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error deleting attribute: {ex.Message}");
+			return false;
+		}
+	}
+
+	// <summary>
 	// Add a new unit.
 	// </summary>
 	public async Task<bool> AddUnitAsync(string name)
@@ -377,9 +406,26 @@ public class MeasurementService
 		return collections.Select(c => c.Id).ToArray();
 	}
 
-	public Collection GetCollectionById(int id)
+	// <summary>
+	// Gets a collection by its ID with an ok value if none was found.
+	// </summary>
+	public (Collection, bool) GetCollectionById(int id)
 	{
-		return collections.FirstOrDefault(c => c.Id == id) ?? new Collection();
+		Collection collection;
+		try
+		{
+			if (collections.Length == 0)
+			{
+				return (new Collection(), false);
+			}
+			collection = collections.First(c => c.Id == id);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error getting collection by ID: {ex.Message}");
+			return (new Collection(), false);
+		}
+		return (collection, true);
 	}
 }
 

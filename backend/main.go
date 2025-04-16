@@ -30,7 +30,7 @@ func main() {
 	// Init DB
 
 	// Mount the database file or create if not exists
-	DB, err = sql.Open("sqlite3", db_files+"data.db")
+	DB, err = sql.Open("sqlite3", "file:"+db_files+"data.db?_foreign_keys=on")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,11 +46,6 @@ func main() {
 		log.Fatal(err)
 	}
 	_, err = DB.Exec(string(init))
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Enable foreign keys
-	_, err = DB.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
 		log.Fatal(err)
 	}
