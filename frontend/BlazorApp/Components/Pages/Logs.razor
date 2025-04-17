@@ -1,0 +1,71 @@
+﻿@page "/logs"
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Authorization
+
+<AuthorizeView Roles="admin">
+	<Authorized>
+		<div class="m-4 flex-grow">
+			<h1 class="text-3xl font-bold">Logs</h1>
+			<div class="flex flex-col gap-2 mt-4">
+				@if (isLoading)
+				{
+					<p>Loading...</p>
+				}
+				else if (logs.Length == 0)
+				{
+					<p>No logs available.</p>
+				}
+				else if (!string.IsNullOrEmpty(errorMessage))
+				{
+					<p class="text-red-500">@errorMessage</p>
+				}
+				else
+				{
+					foreach (var log in logs)
+					{
+						<div class="border-b last:hidden">
+							<p>@log.RequestUrl</p>
+							<p class="text-sm text-gray-500">@log.CreatedAt</p>
+						</div>
+					}
+				}
+			</div>
+		</div>
+	</Authorized>
+	<NotAuthorized>
+		@{
+			Nav.NavigateTo("/access-denied");
+		}
+	</NotAuthorized>
+</AuthorizeView>
+
+@code {
+	[Inject]
+	private MeasurementService MeasurementService { get; set; } = default!;
+	private LogEntry[] logs = Array.Empty<LogEntry>();
+	private string? errorMessage;
+	private bool isLoading = true;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			try
+			{
+				logs = await MeasurementService.FetchLogsAsync(null, null);
+			}
+			catch (Exception ex)
+			{
+				errorMessage = ex.Message;
+			}
+			finally
+			{
+				isLoading = false;
+			}
+
+			StateHasChanged();
+		}
+		await base.OnAfterRenderAsync(firstRender);
+	}
+
+}

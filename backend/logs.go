@@ -91,6 +91,14 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+/*
+Gets one or more logs from db
+
+Query params:
+
+	user_id: int,
+	http_method: string ("get", "post", "put", "update", "delete")
+*/
 func fetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	_userId := r.FormValue("user_id")
@@ -102,8 +110,8 @@ func fetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if _userId != "" {
 		userId, err := strconv.Atoi(_userId)
-		if err != nil || userId <= 0 {
-			http.Error(w, "user_id must be a positive int", http.StatusBadRequest)
+		if err != nil {
+			http.Error(w, "user_id must be an int", http.StatusBadRequest)
 			return
 		}
 		filters = append(filters, "instance_user = ?")

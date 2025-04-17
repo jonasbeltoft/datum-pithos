@@ -51,7 +51,6 @@
             var uriBuilder = new UriBuilder(navigationManager.Uri);
             var q = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
             var path = q["returnUrl"] ?? "/";
-            Console.WriteLine("Path: " + path);
             navigationManager.NavigateTo(path);
         }
     </Authorized>

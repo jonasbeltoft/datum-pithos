@@ -254,6 +254,55 @@ public class MeasurementService
 	}
 
 	// <summary>
+	// Fetches logs.
+	// </summary>
+	public async Task<LogEntry[]> FetchLogsAsync(int? userId, string? httpMethod)
+	{
+		// Parameters:
+		// http_method: string,
+		// user_id: int,
+		try
+		{
+			var args = new Dictionary<string, string>();
+			if (userId != null)
+			{
+				args.Add("user_id", userId.ToString()!);
+			}
+			if (httpMethod != null)
+			{
+				args.Add("http_method", httpMethod);
+			}
+			var queryString = string.Join("&", args.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
+			if (!string.IsNullOrEmpty(queryString))
+			{
+				queryString = "?" + queryString;
+			}
+			HttpResponseMessage response = await httpClient.GetAsync($"logs{queryString}");
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to fetch logs: {response.StatusCode}");
+				return [];
+			}
+
+			string jsonString = await response.Content.ReadAsStringAsync();
+			if (string.IsNullOrEmpty(jsonString))
+			{
+				Console.WriteLine("Failed to fetch logs: response content is empty");
+				return [];
+			}
+			var logs = JsonSerializer.Deserialize<LogEntry[]>(jsonString);
+
+			return logs ?? [];
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error fetching logs: {ex.Message}");
+			return [];
+		}
+	}
+
+	// <summary>
 	// Adds a new measurement to a collection.
 	// </summary>
 	public async Task<bool> AddMeasurementAsync(int collectionId)
@@ -428,6 +477,30 @@ public class MeasurementService
 		return (collection, true);
 	}
 }
+
+public class LogEntry
+{
+	public int Id { get; set; }
+
+	[JsonPropertyName("created_at")]
+	public long CreatedAt { get; set; }
+
+	[JsonPropertyName("instance_user")]
+	public int InstanceUser { get; set; }
+
+	[JsonPropertyName("crud_action")]
+	public string CrudAction { get; set; } = string.Empty;
+
+	[JsonPropertyName("request_url")]
+	public string RequestUrl { get; set; } = string.Empty;
+
+	[JsonPropertyName("request_body")]
+	public string RequestBody { get; set; } = string.Empty;
+
+	[JsonPropertyName("response_code")]
+	public int ResponseCode { get; set; }
+}
+
 
 public class Unit
 {
