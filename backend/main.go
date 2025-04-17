@@ -56,13 +56,14 @@ func main() {
 
 	// Public routes
 	r.Group(func(r chi.Router) {
+		r.Use(dbLoggerMiddleware)
 		r.Post("/register", registerHandler)
 		r.Post("/login", loginHandler)
 	})
 	// Private route (requires auth token)
 	// user := r.Context().Value("user").(User) is available in these methods
 	r.Group(func(r chi.Router) {
-		r.Use(AuthenticationMiddleware)
+		r.Use(AuthenticationMiddleware, dbLoggerMiddleware)
 		r.Post("/logout", logoutHandler)
 		r.Get("/profile", profileHandler)
 
@@ -81,6 +82,12 @@ func main() {
 		r.Delete("/samples", deleteSampleHandler)
 		r.Put("/samples", updateSampleHandler)
 		r.Post("/sample-values", insertOrUpdateSampleValueHandler)
+	})
+
+	// Admin routes (requires admin role)
+	r.Group(func(r chi.Router) {
+		r.Use(AuthenticationMiddleware, dbLoggerMiddleware)
+		r.Get("/logs", fetchLogsHandler)
 	})
 
 	fmt.Println("Starting server on :8000")

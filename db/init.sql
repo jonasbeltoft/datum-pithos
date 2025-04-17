@@ -57,10 +57,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS logs (
     id INTEGER PRIMARY KEY,
     created_at INTEGER NOT NULL, -- Stores UNIX time
-    instance_user INTEGER NOT NULL, -- References users
-    crud_action TEXT NOT NULL, -- Action performed (e.g., CREATE, READ, UPDATE, DELETE)
-    value TEXT,
-    CONSTRAINT fk_user FOREIGN KEY (instance_user) REFERENCES users (id)
+    instance_user INTEGER, -- References users
+    crud_action TEXT NOT NULL, -- Action performed
+    request_url TEXT,
+    request_body TEXT,
+    response_code INTEGER
 );
 
 -- Initialize roles table only if empty

@@ -268,6 +268,20 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		collectionId = id
 	}
 
+	// Check if collectionId is valid
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM collections WHERE id = ?)`
+	err := DB.QueryRow(query, collectionId).Scan(&exists)
+	if err != nil {
+		log.Println("DB error:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if !exists {
+		http.Error(w, "Collection not found", http.StatusNotFound)
+		return
+	}
+
 	// Parse pagination params
 	_pageSize := r.FormValue("page_size")
 	_page := r.FormValue("page")

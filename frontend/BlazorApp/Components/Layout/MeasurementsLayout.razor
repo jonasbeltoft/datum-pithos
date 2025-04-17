@@ -115,7 +115,6 @@
     {
         var result = await MeasurementService.FetchCollectionsAsync();
         Collections = result.ToDictionary(c => c.Id, c => c);
-        await MeasurementService.FetchUnitsAsync();
     }
 
     private string GetLink(int _id)
