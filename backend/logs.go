@@ -36,6 +36,37 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 
+		// Wrap the response writer to capture the status code
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		next.ServeHTTP(ww, r)
+
+		url := r.URL.RequestURI()
+
+		// Hide password in logs
+		if r.URL.Path == "/register" {
+			params := strings.Split(url, "&")
+			for i, param := range params {
+				if strings.Contains(param, "password") {
+					params[i] = "password=****"
+				}
+			}
+			url = strings.Join(params, "&")
+		}
+		if r.URL.Path == "/login" {
+			var body LoginBody
+			err = json.Unmarshal(bodyBytes, &body)
+			if err != nil {
+				log.Println("failed to unmarshal request body", err.Error())
+			} else {
+				// Hide password in logs
+				body.Password = "****"
+				bodyBytes, err = json.Marshal(body)
+				if err != nil {
+					log.Println("failed to marshal request body", err.Error())
+				}
+			}
+		}
+
 		// Remove all whitespace from the body
 		var b strings.Builder
 		b.Grow(len(string(bodyBytes)))
@@ -44,18 +75,14 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 				b.WriteRune(ch)
 			}
 		}
-		body := b.String()
-
-		// Wrap the response writer to capture the status code
-		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-		next.ServeHTTP(ww, r)
+		bodyString := b.String()
 
 		action_log := Log{
 			CreatedAt:    time.Now().Unix(),
 			InstanceUser: user.Id,
 			CRUDAction:   r.Method,
-			RequestUrl:   r.RemoteAddr + " " + r.URL.RequestURI(),
-			RequestBody:  body,
+			RequestUrl:   r.RemoteAddr + " " + url,
+			RequestBody:  bodyString,
 			ResponseCode: ww.Status(),
 		}
 		if err := insertLog(action_log); err != nil {

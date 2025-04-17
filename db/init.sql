@@ -1,11 +1,16 @@
 -- Create table: units
-CREATE TABLE IF NOT EXISTS units (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL);
+CREATE TABLE IF NOT EXISTS units (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    CONSTRAINT unique_name UNIQUE (name)
+);
 
 -- Create table: collections
 CREATE TABLE IF NOT EXISTS collections (
     id INTEGER PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT
+    name TEXT NOT NULL,
+    description TEXT,
+    CONSTRAINT unique_name UNIQUE (name)
 );
 
 -- Create table: samples
@@ -44,12 +49,13 @@ CREATE TABLE IF NOT EXISTS roles (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
 -- Create table: users
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
+    username TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     role_id INTEGER, -- Nullable, references roles table
     display_name TEXT,
     access_token TEXT,
     token_expiry_date INTEGER, -- UNIX time in seconds
+    CONSTRAINT unique_username UNIQUE (username),
     CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles (id)
 );
 

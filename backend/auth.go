@@ -15,6 +15,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// AdminMiddleware checks if the user is an admin (role_id = 1)
+func AdminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value("user").(User)
+
+		if user.RoleId == nil || *user.RoleId != 1 {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+
+		// Proceed to the next handler if authorized
+		next.ServeHTTP(w, r)
+	})
+}
+
 // AuthMiddleware checks for an Authorization header
 func AuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +106,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		RoleId:         &r_id,
 	}
 
-	createUser(user)
+	user, err = createUser(user)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: users.username") {
+			http.Error(w, "Username already exists", http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "Failed create user", http.StatusInternalServerError)
+		return
+	}
 
 	fmt.Fprintln(w, "User created successfully")
 }

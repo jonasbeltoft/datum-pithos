@@ -86,7 +86,7 @@ func main() {
 
 	// Admin routes (requires admin role)
 	r.Group(func(r chi.Router) {
-		r.Use(AuthenticationMiddleware, dbLoggerMiddleware)
+		r.Use(AuthenticationMiddleware, dbLoggerMiddleware, AdminMiddleware)
 		r.Get("/logs", fetchLogsHandler)
 	})
 
