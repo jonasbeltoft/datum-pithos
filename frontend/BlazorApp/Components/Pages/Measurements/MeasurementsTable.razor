@@ -1,4 +1,6 @@
 ﻿@using BlazorApp.Services
+
+@timeFrom
 @if (measurements == null)
 {
 	<div class="flex-grow flex justify-center w-[85svw] max-w-[calc(100svw-20rem)]">
@@ -14,7 +16,7 @@
 
 	</div>
 }
-else if (measurements.entries.Count() == 0)
+else if (measurements.entries.Count() == 0 || FilteredEntries.Count() == 0)
 {
 	<div class="flex-grow flex justify-center mt-16">
 		<span class="text-sm text-zinc-500">Ingen målinger fundet.</span>
@@ -22,7 +24,7 @@ else if (measurements.entries.Count() == 0)
 }
 else
 {
-	<div class="overflow-auto self-center max-w-full border rounded-lg">
+	<div class="overflow-auto max-w-full self-start border rounded-lg">
 		<table class="table-row text-sm">
 			<thead class="sticky top-0 z-10 bg-white border-b">
 				<tr class="text-left align-top">
@@ -40,8 +42,8 @@ else
 
 							<button
 								class="bg-white w-9 h-9 rounded-full border absolute -bottom-2 -right-2 hidden group-hover:block z-20 *:hover:fill-white 
-																																																															hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 
-																																																															hover:before:rounded-full hover:before:-z-10 hover:before:p-2 "
+																																																																																																																																																													hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 
+																																																																																																																																																													hover:before:rounded-full hover:before:-z-10 hover:before:p-2 "
 								@onclick="() => ShowDeleteColModal(measurements.headers[entry_index].Id)">
 								<svg class="relative m-auto fill-red-500 z-10" xmlns="http://www.w3.org/2000/svg" width="20"
 									height="20" viewBox="0 0 16 15">
@@ -62,7 +64,7 @@ else
 				</tr>
 			</thead>
 			<tbody>
-				@for (int i = 0; i < measurements.entries.Count(); i++)
+				@for (int i = 0; i < FilteredEntries.Count(); i++)
 				{
 					int entry_index = i;
 					<tr
@@ -72,18 +74,17 @@ else
 							<input
 								class="m-2 p-2 w-[calc(100%-1rem)] ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
 								placeholder="-" type="datetime-local"
-								value="@DateTimeOffset.FromUnixTimeSeconds(measurements.entries[entry_index].CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")"
+								value="@DateTimeOffset.FromUnixTimeSeconds(FilteredEntries[entry_index].CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")"
 								@onchange="@((ChangeEventArgs args) => TimeValueChangedAsync(args, entry_index))">
 						</td>
 						@for (int j = 0; j < measurements.headers.Count(); j++)
 						{
-
 							int value_index = j;
 							<td
 								class="max-w-[15ch] w-max text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 								<input
 									class="m-2 p-2 min-w-min text-ellipsis ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30
-																																																																																																																																																																																																																																																																																																																																														@(inputErrors.TryGetValue((entry_index, value_index), out var err) && err ? "ring-2 !ring-red-500" : "")"
+																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											@(inputErrors.TryGetValue((entry_index, value_index), out var err) && err ? "ring-2 !ring-red-500" : "")"
 									placeholder="-" size="5" type="text" value="@GetValue(entry_index, value_index)"
 									@onchange="@((ChangeEventArgs args) => ValueChangedAsync(args, entry_index, value_index))" />
 							</td>
@@ -92,14 +93,14 @@ else
 							class="max-w-[25ch] text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 							<input
 								class="m-2 p-2 min-w-min text-ellipsis ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
-								placeholder="-" size="15" type="text" value="@measurements.entries[entry_index].Note"
+								placeholder="-" size="15" type="text" value="@FilteredEntries[entry_index].Note"
 								@onchange="@((ChangeEventArgs args) => NoteValueChangedAsync(args, entry_index))">
 						</td>
 						<td class="border-r last-of-type:border-none">
 							<div class="grid justify-center">
 								<button
 									class="w-5 h-5 block relative *:hover:fill-white hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 hover:before:rounded-md hover:before:-z-0 hover:before:p-2 hover:before:m-[-0.5rem]"
-									@onclick="() => ShowDeleteRowModal(measurements.entries[entry_index].Id)">
+									@onclick="() => ShowDeleteRowModal(FilteredEntries[entry_index].Id)">
 									<svg class="relative fill-red-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
 										viewBox="0 0 16 16">
 										<path
@@ -171,9 +172,31 @@ else
 	[Parameter]
 	public EventCallback RefreshParent { get; set; }
 
+	[Parameter]
+	public string? searchString { get; set; } = null;
+
+	[Parameter]
+	public long? timeFrom { get; set; } = null;
+
+	[Parameter]
+	public long? timeTo { get; set; } = null;
+
 	[Inject]
 	public MeasurementService MeasurementService { get; set; } = default!;
 	public MeasurementCollection? measurements { get; set; } = null;
+
+	// When searchString, timeFrom, or timeTo changes, the FilteredEntries will be updated automatically.
+	private List<Measurement> FilteredEntries =>
+	(measurements?.entries ?? new List<Measurement>())
+	.Where(entry =>
+	(string.IsNullOrWhiteSpace(searchString) ||
+	entry.Note.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+	entry.values.Any(val =>
+	val.value.Contains(searchString, StringComparison.OrdinalIgnoreCase))) &&
+	(timeFrom == null || entry.CreatedAt >= timeFrom) &&
+	(timeTo == null || entry.CreatedAt <= timeTo)
+	).ToList();
+
 	private string? fetchErr = null;
 	Dictionary<(int entryIndex, int valueIndex), bool> inputErrors = new();
 
@@ -241,10 +264,8 @@ else
 
 	public string GetValue(int entry_index, int value_index)
 	{
-		if (measurements == null || measurements.entries.Count() == 0)
-			return string.Empty;
-		var attrId = measurements.headers[value_index].Id;
-		return measurements.entries[entry_index].values.FirstOrDefault(v => v.Id == attrId)?.value ?? "";
+		return FilteredEntries[entry_index].values
+		.FirstOrDefault(v => v.AttributeId == measurements!.headers[value_index].Id)?.value ?? "";
 	}
 
 	public async Task RefreshState(string? searchString = null)
@@ -297,7 +318,7 @@ else
 			var time = DateTimeOffset.ParseExact(args.Value?.ToString() ?? "", format, null).ToUnixTimeSeconds();
 
 			// UPDATE VALUE
-			var result = await MeasurementService.UpdateMeasurementAsync(measurements!.entries[entry_index].Id, time, null);
+			var result = await MeasurementService.UpdateMeasurementAsync(FilteredEntries[entry_index].Id, time, null);
 
 			if (!result)
 			{
@@ -305,7 +326,8 @@ else
 			}
 			else
 			{
-				measurements!.entries[entry_index].CreatedAt = time;
+				var mesasurementId = FilteredEntries[entry_index].Id;
+				measurements!.entries.FirstOrDefault(e => e.Id == mesasurementId)!.CreatedAt = time;
 				globalErr = null;
 			}
 		}
@@ -324,15 +346,13 @@ else
 	private async void ValueChangedAsync(ChangeEventArgs args, int entry_index, int value_index) //
 	{
 		var attrId = measurements!.headers[value_index].Id;
-		var elem = measurements.entries[entry_index].values.FirstOrDefault(v => v.Id == attrId);
+		var fElemId = FilteredEntries[entry_index].Id;
+		var rElemIndex = measurements!.entries.FindIndex(e => e.Id == fElemId);
 
-		if (elem != null)
-		{
-			elem.value = args.Value?.ToString() ?? "";
-		}
+		Console.WriteLine($"ValueChangedAsync: {entry_index}, {value_index}");
 
 		// UPDATE VALUE
-		var result = await MeasurementService.UpdateMeasurementValueAsync(measurements!.entries[entry_index].Id,
+		var result = await MeasurementService.UpdateMeasurementValueAsync(FilteredEntries[entry_index].Id,
 		attrId, args.Value?.ToString() ?? "");
 		inputErrors[(entry_index, value_index)] = !result;
 		if (inputErrors.Any(e => e.Value))
@@ -343,6 +363,21 @@ else
 		{
 			globalErr = null;
 		}
+
+		if (measurements!.entries[rElemIndex].values.Exists(v => v.AttributeId == attrId))
+		{
+			measurements!.entries[rElemIndex].values.FirstOrDefault(v => v.AttributeId == attrId)!.value = args.Value?.ToString() ??
+			"";
+		}
+		else
+		{
+			measurements!.entries[rElemIndex].values.Add(new MeasurementValue()
+			{
+				AttributeId = attrId,
+				value = args.Value?.ToString() ?? ""
+			});
+		}
+
 		await RefreshParent.InvokeAsync();
 		StateHasChanged();
 	}

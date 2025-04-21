@@ -574,7 +574,7 @@ public class Measurement
 public class MeasurementValue
 {
 	[JsonPropertyName("attribute_id")]
-	public int Id { get; set; }
+	public int AttributeId { get; set; }
 
 	public string value { get; set; } = string.Empty;
 }
