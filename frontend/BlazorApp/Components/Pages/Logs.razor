@@ -1,15 +1,16 @@
 ﻿@page "/logs"
 @inject NavigationManager Nav
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Fast.Components.FluentUI
+@using System.Text.Json
 
 <AuthorizeView Roles="admin">
 	<Authorized>
-		<div class="m-4 flex-grow">
-			<h1 class="text-3xl font-bold mb-4">Logs</h1>
-			<div class="flex flex-col gap-2">
+		<div class="m-4 flex-grow w-px">
+			<h1 class="text-3xl self-start font-bold mb-4">Logs</h1>
 				@if (isLoading)
 				{
-					<p>Loading...</p>
+					<div class="loader"></div>
 				}
 				else if (logs.Length == 0)
 				{
@@ -21,25 +22,62 @@
 				}
 				else
 				{
-					foreach (var log in logs)
+					<FluentAccordion class="border rounded-lg mb-4 gap-0">
+					@foreach (var log in logs)
 					{
-						<div class="border-b last:border-none">
-							<span class="inline-flex gap-2">
-								@(log.RequestUrl.Split(' ')[0] ?? "")
+						<FluentAccordionItem part="region" class="border-b last:border-none rounded-none odd:bg-zinc-100/50 hover:bg-zinc-200 hover:border-zinc-200 *:hover:border-zinc-50">
+							<span slot="heading" class="my-2 inline-flex gap-2 justify-between font-normal text-base font-[Inter]">
+								<p class="m-0 text-gray-500">
+									@DateTimeOffset.FromUnixTimeSeconds(log.CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+								</p>
+								<span>
+									@getLogUserName(log)
+								</span>
+								<span>
+									@(log.RequestUrl.Split(' ')[0] ?? "")
+								</span>
 								<svg class="self-center" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black"
 									viewBox="0 0 16 16">
 									<path fill-rule="evenodd"
 										d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
 								</svg>
-								@(log.RequestUrl.Split(' ')[1] ?? "")
+								<span class="inline-flex gap-2">
+									<div class="px-1.5 rounded-sm tracking-[0.05em] text-white @getLogActionColor(log.CrudAction)">
+										@log.CrudAction.ToString().ToUpper()
+									</div>
+									@(log.RequestUrl.Split(' ')[1] ?? "")
+								</span>
 							</span>
-							<p class="text-sm text-gray-500">
-								@DateTimeOffset.FromUnixTimeSeconds(log.CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-							</p>
-						</div>
+							<span slot="end" class="inline-flex gap-4 font-normal text-base font-[Inter]">
+								Response: 
+								<span class="px-1.5 rounded-sm tracking-[0.05em] text-white @getLogResponseColor(log.ResponseCode)">
+									@log.ResponseCode
+								</span>
+							</span>
+							<span class="font-normal text-sm font-[Inter] rounded-none">
+								@if (string.IsNullOrEmpty(log.RequestBody)) {
+									<p>...</p>
+								} else {
+									try {
+										var jsonDoc = JsonDocument.Parse(log.RequestBody);
+										var prettyJson = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions { WriteIndented = true });
+										<pre class="whitespace-pre-wrap font-mono text-sm">@prettyJson</pre>
+									} catch {
+										// If it's not valid JSON, just print raw
+										<p>@log.RequestBody</p>
+									}
+								}
+							</span>
+							
+						</FluentAccordionItem>
 					}
+					<style>
+						fluent-accordion-item::part(region) {
+						border-radius: 0;
+					}
+					</style>
+					</FluentAccordion>
 				}
-			</div>
 		</div>
 	</Authorized>
 	<NotAuthorized>
@@ -55,6 +93,50 @@
 	private LogEntry[] logs = Array.Empty<LogEntry>();
 	private string? errorMessage;
 	private bool isLoading = true;
+
+	private string getLogUserName(LogEntry log)
+	{
+		if (log.InstanceUserId == -1)
+		{
+			return "Unknown";
+		}
+		else if (string.IsNullOrEmpty(log.InstanceUsername))
+		{
+			return $"User {log.InstanceUserId}";
+		}
+		else
+		{
+			return log.InstanceUsername;
+		}
+	}
+
+	private string getLogResponseColor(int responseCode)
+	{
+		return responseCode switch
+		{
+			200 => "bg-green-600",
+			201 => "bg-green-600",
+			204 => "bg-green-600",
+			400 => "bg-red-500",
+			401 => "bg-red-600",
+			403 => "bg-red-600",
+			404 => "bg-red-600",
+			500 => "bg-red-600",
+			_ => "bg-zinc-500",
+		};
+	}
+
+	private string getLogActionColor(string action)
+	{
+		return action.ToUpper() switch
+		{
+			"GET" => "bg-green-600",
+			"PUT" => "bg-blue-600",
+			"POST" => "bg-yellow-500",
+			"DELETE" => "bg-red-600",
+			_ => "bg-zinc-500",
+		};
+	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{

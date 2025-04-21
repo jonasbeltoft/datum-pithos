@@ -75,7 +75,7 @@
 					placeholder="Søg..." type="text" disabled=@(isSearchDisabled) @bind="SearchString"> *@
 			</div>
 			@* <MeasurementsTable FilteredMeasurements="FMeasurements" collectionId="CollectionIdInt"></MeasurementsTable> *@
-			@if (CollectionIdInt > 0)
+			@if (CollectionIdInt > -1)
 			{
 				<MeasurementsTable @ref="childRef" RefreshParent=@RefreshErr collectionId="CollectionIdInt">
 				</MeasurementsTable>

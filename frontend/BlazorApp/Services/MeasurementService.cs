@@ -384,10 +384,15 @@ public class MeasurementService
 		{
 			args.Add("unit_id", unitId.ToString()!);
 		}
+		var queryString = string.Join("&", args.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
+		if (!string.IsNullOrEmpty(queryString))
+		{
+			queryString = "?" + queryString;
+		}
 
 		try
 		{
-			HttpResponseMessage response = await httpClient.PostAsync("attributes", new StringContent(new FormUrlEncodedContent(args).ReadAsStringAsync().Result, Encoding.UTF8, "application/x-www-form-urlencoded"));
+			HttpResponseMessage response = await httpClient.PostAsync($"attributes{queryString}", new StringContent(""));
 
 			if (!response.IsSuccessStatusCode)
 			{
@@ -486,7 +491,10 @@ public class LogEntry
 	public long CreatedAt { get; set; }
 
 	[JsonPropertyName("instance_user")]
-	public int InstanceUser { get; set; }
+	public int InstanceUserId { get; set; }
+
+	[JsonPropertyName("instance_username")]
+	public string InstanceUsername { get; set; } = string.Empty;
 
 	[JsonPropertyName("crud_action")]
 	public string CrudAction { get; set; } = string.Empty;

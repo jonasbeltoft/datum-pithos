@@ -78,12 +78,18 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 		bodyString := b.String()
 
 		action_log := Log{
-			CreatedAt:    time.Now().Unix(),
-			InstanceUser: user.Id,
-			CRUDAction:   r.Method,
-			RequestUrl:   r.RemoteAddr + " " + url,
-			RequestBody:  bodyString,
-			ResponseCode: ww.Status(),
+			CreatedAt:        time.Now().Unix(),
+			InstanceUserId:   user.Id,
+			InstanceUserName: user.Username,
+			CRUDAction:       r.Method,
+			RequestUrl:       r.RemoteAddr + " " + url,
+			RequestBody:      bodyString,
+			ResponseCode:     ww.Status(),
+		}
+		if r.URL.Path == "/attributes" {
+			println("Request URL: ", url)
+			println("Request Body: ", bodyString)
+			println(action_log.RequestUrl, action_log.RequestBody)
 		}
 
 		// Send log to channel for async processing
@@ -103,12 +109,15 @@ Gets one or more logs from db
 Query params:
 
 	user_id: int,
+	fill_username: bool (default false),
 	http_method: string ("get", "post", "put", "update", "delete")
 */
 func fetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	_userId := r.FormValue("user_id")
+	_fillUsername := r.FormValue("fill_username")
 	httpMethod := strings.ToLower(r.FormValue("http_method"))
+	fillUsername := false
 
 	// Validate & build filters
 	var filters []string
@@ -122,6 +131,15 @@ func fetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		filters = append(filters, "instance_user = ?")
 		args = append(args, userId)
+	}
+
+	if _fillUsername != "" {
+		result, err := strconv.ParseBool(_fillUsername)
+		if err != nil {
+			http.Error(w, "fill_username must be a bool (1, t, T, TRUE, true, True)", http.StatusBadRequest)
+			return
+		}
+		fillUsername = result
 	}
 
 	if httpMethod != "" {
@@ -156,32 +174,63 @@ func fetchLogsHandler(w http.ResponseWriter, r *http.Request) {
 	var logs []Log = make([]Log, 0)
 	for rows.Next() {
 		var log Log
-		if err := rows.Scan(&log.ID, &log.CreatedAt, &log.InstanceUser, &log.CRUDAction, &log.RequestUrl, &log.RequestBody, &log.ResponseCode); err != nil {
+		if err := rows.Scan(&log.ID, &log.CreatedAt, &log.InstanceUserId, &log.CRUDAction, &log.RequestUrl, &log.RequestBody, &log.ResponseCode); err != nil {
 			http.Error(w, "error scanning logs", http.StatusInternalServerError)
 			return
 		}
 		logs = append(logs, log)
 	}
 
+	if fillUsername {
+		// Get all usernames
+		usernames := make(map[int]string)
+		userQuery := `SELECT id, username FROM users`
+		userRows, err := DB.Query(userQuery)
+		if err != nil {
+			http.Error(w, "error querying users", http.StatusInternalServerError)
+			return
+		}
+		defer userRows.Close()
+		for userRows.Next() {
+			var user User
+			if err := userRows.Scan(&user.Id, &user.Username); err != nil {
+				http.Error(w, "error scanning users", http.StatusInternalServerError)
+				return
+			}
+			usernames[user.Id] = user.Username
+		}
+		// Fill usernames in logs
+		for i := range logs {
+			if username, ok := usernames[logs[i].InstanceUserId]; ok {
+				logs[i].InstanceUserName = username
+			} else {
+				logs[i].InstanceUserName = "Unknown"
+			}
+		}
+	}
+
+	//log.Println("Fetched logs: ", logs[1].InstanceUserId, logs[1].InstanceUserName, logs[1].CRUDAction, logs[1].RequestUrl, logs[1].RequestBody, logs[1].ResponseCode)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(logs)
 }
 
 type Log struct {
-	ID           int    `json:"id"`
-	CreatedAt    int64  `json:"created_at"`
-	InstanceUser int    `json:"instance_user"`
-	CRUDAction   string `json:"crud_action"`
-	RequestUrl   string `json:"request_url"`
-	RequestBody  string `json:"request_body"`
-	ResponseCode int    `json:"response_code"`
+	ID               int    `json:"id"`
+	CreatedAt        int64  `json:"created_at"`
+	InstanceUserId   int    `json:"instance_user"`
+	InstanceUserName string `json:"instance_username,omitempty"`
+	CRUDAction       string `json:"crud_action"`
+	RequestUrl       string `json:"request_url"`
+	RequestBody      string `json:"request_body"`
+	ResponseCode     int    `json:"response_code"`
 }
 
 func insertLog(log Log) error {
 	// Insert log into database
 	query := `INSERT INTO logs (created_at, instance_user, crud_action, request_url, request_body, response_code) VALUES (?, ?, ?, ?, ?, ?)`
 	for i := 0; i < 5; i++ {
-		_, err := DB.Exec(query, log.CreatedAt, log.InstanceUser, log.CRUDAction, log.RequestUrl, log.RequestBody, log.ResponseCode)
+		_, err := DB.Exec(query, log.CreatedAt, log.InstanceUserId, log.CRUDAction, log.RequestUrl, log.RequestBody, log.ResponseCode)
 		if err == nil {
 			return nil
 		}
