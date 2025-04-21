@@ -25,7 +25,7 @@
 					<FluentAccordion class="border rounded-lg mb-4 gap-0">
 					@foreach (var log in logs)
 					{
-						<FluentAccordionItem part="region" class="border-b last:border-none rounded-none odd:bg-zinc-100/50 hover:bg-zinc-200 hover:border-zinc-200 *:hover:border-zinc-50">
+						<FluentAccordionItem part="region button icon" class="border-b last:border-none rounded-none odd:bg-zinc-100/50 hover:bg-zinc-200 hover:border-zinc-200 *:hover:border-zinc-50">
 							<span slot="heading" class="my-2 inline-flex gap-2 justify-between font-normal text-base font-[Inter]">
 								<p class="m-0 text-gray-500">
 									@DateTimeOffset.FromUnixTimeSeconds(log.CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")
@@ -48,7 +48,7 @@
 									@(log.RequestUrl.Split(' ')[1] ?? "")
 								</span>
 							</span>
-							<span slot="end" class="inline-flex gap-4 font-normal text-base font-[Inter]">
+							<span slot="end" class="inline-flex gap-3 font-normal text-base font-[Inter]">
 								Response: 
 								<span class="px-1.5 rounded-sm tracking-[0.05em] text-white @getLogResponseColor(log.ResponseCode)">
 									@log.ResponseCode
@@ -68,13 +68,34 @@
 									}
 								}
 							</span>
-							
+							<span slot="collapsed-icon" class="grid justify-center">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
+								</svg>
+							</span>
+							<span slot="expanded-icon" class="grid justify-center">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708z"/>
+								</svg>
+							</span>
 						</FluentAccordionItem>
 					}
 					<style>
 						fluent-accordion-item::part(region) {
-						border-radius: 0;
-					}
+							border-radius: 0;
+						}
+						fluent-accordion-item::part(button) {
+							padding-left: 20px;
+						}
+						fluent-accordion-item::part(icon) {
+							margin-right: 16px;
+							background-color: transparent;
+							& svg {
+								width: 16px;
+								height: 16px;
+								viewBox: 0 0 16 16;
+							}
+						}
 					</style>
 					</FluentAccordion>
 				}
