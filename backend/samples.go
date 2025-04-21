@@ -449,7 +449,6 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println("DB Fetch Error (Values):", err)
 				return
 			}
-			defer valueRows.Close()
 
 			var values = make([]SampleValue, 0)
 			for valueRows.Next() {
@@ -463,6 +462,7 @@ func fetchSamplesHandler(w http.ResponseWriter, r *http.Request) {
 
 			sample.Values = values
 			samples = append(samples, sample)
+			valueRows.Close()
 		}
 
 		// Check for row iteration errors

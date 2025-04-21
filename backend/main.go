@@ -30,7 +30,7 @@ func main() {
 	// Init DB
 
 	// Mount the database file or create if not exists
-	DB, err = sql.Open("sqlite3", "file:"+db_files+"data.db?_foreign_keys=on")
+	DB, err = sql.Open("sqlite3", "file:"+db_files+"data.db?_foreign_keys=on&cache=shared&busy_timeout=5000&journal_mode=WAL")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -85,8 +85,14 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 			RequestBody:  bodyString,
 			ResponseCode: ww.Status(),
 		}
-		if err := insertLog(action_log); err != nil {
-			log.Println("failed to log request: ", err.Error())
+
+		// Send log to channel for async processing
+		select {
+		case logChannel <- action_log:
+			// sent successfully
+		default:
+			// channel is full, drop log to avoid blocking
+			log.Println("logChannel full, dropping log")
 		}
 	})
 }
@@ -174,9 +180,30 @@ type Log struct {
 func insertLog(log Log) error {
 	// Insert log into database
 	query := `INSERT INTO logs (created_at, instance_user, crud_action, request_url, request_body, response_code) VALUES (?, ?, ?, ?, ?, ?)`
-	_, err := DB.Exec(query, log.CreatedAt, log.InstanceUser, log.CRUDAction, log.RequestUrl, log.RequestBody, log.ResponseCode)
-	if err != nil {
+	for i := 0; i < 5; i++ {
+		_, err := DB.Exec(query, log.CreatedAt, log.InstanceUser, log.CRUDAction, log.RequestUrl, log.RequestBody, log.ResponseCode)
+		if err == nil {
+			return nil
+		}
+		if strings.Contains(err.Error(), "database is locked") {
+			time.Sleep(50 * time.Millisecond) // wait and retry
+			continue
+		}
 		return fmt.Errorf("failed to insert log: %w", err)
 	}
-	return nil
+	return fmt.Errorf("failed to insert log after retries")
+}
+
+var logChannel = make(chan Log, 1000) // buffered
+
+func init() {
+	go logWriter()
+}
+
+func logWriter() {
+	for logEntry := range logChannel {
+		if err := insertLog(logEntry); err != nil {
+			log.Println("failed to insert log: ", err.Error())
+		}
+	}
 }

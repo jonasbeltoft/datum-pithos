@@ -1,12 +1,12 @@
 ﻿@page "/logs"
 @inject NavigationManager Nav
-@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 
 <AuthorizeView Roles="admin">
 	<Authorized>
 		<div class="m-4 flex-grow">
-			<h1 class="text-3xl font-bold">Logs</h1>
-			<div class="flex flex-col gap-2 mt-4">
+			<h1 class="text-3xl font-bold mb-4">Logs</h1>
+			<div class="flex flex-col gap-2">
 				@if (isLoading)
 				{
 					<p>Loading...</p>
@@ -23,9 +23,19 @@
 				{
 					foreach (var log in logs)
 					{
-						<div class="border-b last:hidden">
-							<p>@log.RequestUrl</p>
-							<p class="text-sm text-gray-500">@log.CreatedAt</p>
+						<div class="border-b last:border-none">
+							<span class="inline-flex gap-2">
+								@(log.RequestUrl.Split(' ')[0] ?? "")
+								<svg class="self-center" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black"
+									viewBox="0 0 16 16">
+									<path fill-rule="evenodd"
+										d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
+								</svg>
+								@(log.RequestUrl.Split(' ')[1] ?? "")
+							</span>
+							<p class="text-sm text-gray-500">
+								@DateTimeOffset.FromUnixTimeSeconds(log.CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+							</p>
 						</div>
 					}
 				}
