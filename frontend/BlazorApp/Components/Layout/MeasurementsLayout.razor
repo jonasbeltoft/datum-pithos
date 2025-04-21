@@ -3,14 +3,17 @@
 
 <PageTitle>Målinger</PageTitle>
 
-<div class="flex flex-grow flex-row  max-w-[calc(100%-1rem)]">
-    <div class="flex flex-col justify-between min-w-64 border-r border-zinc-200 bg-white">
+<div class="flex flex-grow flex-row max-w-[calc(100%-1rem)]">
+    <div class="flex flex-col justify-start overflow-hidden transition-[width] duration-300 border-zinc-200 bg-white"
+        style="width: @(showSideBar ? "16rem" : "0px"); border-right: @(showSideBar ? "1px solid rgb(228 228 231)" : "none");">
+
+        <h2 class="text-base py-3 mr-4 pr-2 font-semibold text-black border-b">Samlinger</h2>
         <nav class="pr-4 py-3 flex flex-col gap-2 font-medium">
             @foreach (var collection in Collections)
             {
                 <div
-                    class="group inline-flex gap-2 justify-between items-center has-[.active]:bg-zinc-100 p-2 rounded-lg hover:bg-zinc-100">
-                    <NavLink class="grow" href="@GetLink(collection.Value.Id)" Match="NavLinkMatch.All">
+                    class="group inline-flex flex-nowrap gap-2 justify-between items-center has-[.active]:bg-zinc-100 p-2 rounded-lg hover:bg-zinc-100">
+                    <NavLink class="grow whitespace-nowrap" href="@GetLink(collection.Value.Id)" Match="NavLinkMatch.All">
                         @collection.Value.Name
                     </NavLink>
                     <button @onclick="() => ShowModal(collection.Value.Id)"
@@ -24,20 +27,30 @@
                         </svg>
                     </button>
                 </div>
-
             }
         </nav>
-        <div class="pr-4 py-3 font-semibold">
+        <div class="pr-4 mt-auto py-3 font-semibold">
             <NavLink
-                class="focus:outline-offset-4 grid place-items-center p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800 "
+                class="whitespace-nowrap focus:outline-offset-4 grid place-items-center p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800 "
                 href="/measurements/new" Match="NavLinkMatch.All">
                 Ny samling
             </NavLink>
         </div>
     </div>
+    <button class="inline-block overflow-visible p-0 m-0 w-0 h-0" @onclick="() => showSideBar = !showSideBar">
+        <span class="relative transition-all duration-200 @(showSideBar ? "-left-10" : "-left-1") top-3 cursor-pointer">
+            <div class="w-7 h-7 bg-transparent hover:bg-zinc-100 rounded-md grid place-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" class="fill-black">
+                    <path
+                        d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5-1v12h9a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM4 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h2z" />
+
+                </svg>
+            </div>
+        </span>
+    </button>
 
     <CascadingValue Value="this">
-        <main class="mt-4 ml-6 mr-2 mb-3 flex-grow max-w-[calc(100%-17rem)]">
+        <main class="mt-6 ml-8 mb-3 flex-grow @(showSideBar ? "max-w-[calc(100%-16rem)]" : "max-w-[calc(100%-2rem)]")">
             @Body
         </main>
     </CascadingValue>
@@ -76,6 +89,8 @@
     private NavigationManager Navigation { get; set; } = default!;
 
     public Dictionary<int, Collection> Collections { get; set; } = new();
+
+    private bool showSideBar = true;
 
     private bool ModalVisible { get; set; } = false;
     private int ModalCollectionId { get; set; } = 0;
