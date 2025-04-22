@@ -99,7 +99,7 @@
 			@if (CollectionIdInt > -1)
 			{
 				<MeasurementsTable @ref="childRef" timeFrom=@timeFrom timeTo=@timeTo searchString=@SearchString
-					RefreshParent=@RefreshErr collectionId="CollectionIdInt">
+					RefreshParent=@RefreshErr OnRowCountChanged="HandleCountChanged" collectionId="CollectionIdInt">
 				</MeasurementsTable>
 			}
 		</div>
@@ -219,6 +219,18 @@
 	private string addAttributeErr { get; set; } = "";
 	private string addUnitErr { get; set; } = "";
 
+	private void HandleCountChanged(int count)
+	{
+		if (count > 0)
+		{
+			isSearchDisabled = false;
+		}
+		else
+		{
+			isSearchDisabled = true;
+		}
+	}
+
 	private void ShowUnitModal()
 	{
 		UnitModalVisible = true;
@@ -246,6 +258,7 @@
 	private void RefreshErr()
 	{
 		globalErr = childRef!.globalErr;
+		StateHasChanged();
 	}
 	public async Task AddUnit()
 	{
@@ -323,7 +336,6 @@
 				return;
 			}
 
-			isSearchDisabled = false;
 			StateHasChanged();
 			return;
 		}

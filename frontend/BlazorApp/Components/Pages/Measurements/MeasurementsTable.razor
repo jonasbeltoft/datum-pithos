@@ -42,8 +42,8 @@ else
 
 							<button
 								class="bg-white w-9 h-9 rounded-full border absolute -bottom-2 -right-2 hidden group-hover:block z-20 *:hover:fill-white 
-																																																																																																																																																													hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 
-																																																																																																																																																													hover:before:rounded-full hover:before:-z-10 hover:before:p-2 "
+																																																																																																																																																																			hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 
+																																																																																																																																																																			hover:before:rounded-full hover:before:-z-10 hover:before:p-2 "
 								@onclick="() => ShowDeleteColModal(measurements.headers[entry_index].Id)">
 								<svg class="relative m-auto fill-red-500 z-10" xmlns="http://www.w3.org/2000/svg" width="20"
 									height="20" viewBox="0 0 16 15">
@@ -84,7 +84,7 @@ else
 								class="max-w-[15ch] w-max text-ellipsis overflow-hidden whitespace-nowrap border-r last-of-type:border-none">
 								<input
 									class="m-2 p-2 min-w-min text-ellipsis ring-zinc-900 focus:outline-none rounded-md border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											@(inputErrors.TryGetValue((entry_index, value_index), out var err) && err ? "ring-2 !ring-red-500" : "")"
+																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																				@(inputErrors.TryGetValue((entry_index, value_index), out var err) && err ? "ring-2 !ring-red-500" : "")"
 									placeholder="-" size="5" type="text" value="@GetValue(entry_index, value_index)"
 									@onchange="@((ChangeEventArgs args) => ValueChangedAsync(args, entry_index, value_index))" />
 							</td>
@@ -181,9 +181,13 @@ else
 	[Parameter]
 	public long? timeTo { get; set; } = null;
 
+
+
 	[Inject]
 	public MeasurementService MeasurementService { get; set; } = default!;
 	public MeasurementCollection? measurements { get; set; } = null;
+
+	[Parameter] public EventCallback<int> OnRowCountChanged { get; set; }
 
 	// When searchString, timeFrom, or timeTo changes, the FilteredEntries will be updated automatically.
 	private List<Measurement> FilteredEntries =>
@@ -391,12 +395,15 @@ else
 		if (result == null)
 		{
 			// Handle error
+			await OnRowCountChanged.InvokeAsync(0);
+
 			fetchErr = "Der skete en fejl under hentning af målinger.";
 			return;
 		}
 		fetchErr = null;
 
 		measurements = result;
+		await OnRowCountChanged.InvokeAsync(measurements.entries.Count);
 
 		// Notify parent component of success
 		await RefreshParent.InvokeAsync();
