@@ -3,13 +3,15 @@
 
 <AuthorizeView Roles="admin">
 	<Authorized>
-		<div class="m-4 flex flex-col flex-grow w-px">
+		<div class="m-4 relative flex flex-col flex-grow w-px">
+			@if (isLoading)
+			{
+				<div class="absolute -left-8 -top-4 w-[calc(100%+4rem)]">
+					<div class=" loader"></div>
+				</div>
+			}
 			<h1 class="text-3xl self-start font-bold mb-4">Brugere</h1>
-			<div class="flex flex-col gap-4">
-				@if (isLoading)
-				{
-					<div class="loader"></div>
-				}
+			<div class="flex  flex-col gap-4 pb-4 h-[calc(100%-36px)]">
 				@if (!string.IsNullOrEmpty(errorMessage) || users == null || roles == null)
 				{
 					<p class="text-red-500">@errorMessage</p>
@@ -17,11 +19,11 @@
 				else
 				{
 					<button @onclick="OpenUserModal" type="button"
-						class="whitespace-nowrap focus:outline-offset-4 grid place-items-center p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800">
+						class="flex px-4 gap-2 text-sm font-medium h-10 w-fit justify-center items-center focus:outline-offset-4 p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800">
 
-						<span>Lav Ny bruger</span>
+						<span>Opret ny bruger</span>
 
-						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" viewBox="0 0 16 16">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
 							<path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
 							<path fill-rule="evenodd"
 								d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5" />
@@ -33,27 +35,52 @@
 					}
 					else
 					{
-						<div>
-							@foreach (var user in users!)
-							{
-								<div class="flex items-center justify-between p-4 border-b border-gray-200">
-									<div class="flex items-center gap-4">
-										<div>
-											<svg class="fill-zinc-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-												viewBox="0 0 16 16">
-												<path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
-											</svg>
+						<div class="border rounded-lg max-h-[calc(100%-56px)] min-w-full max-w-full overflow-auto">
+							<div>
+
+								@for (int i = 0; i < users!.Count(); i++)
+								{
+									int index = i;
+									<div
+										class="flex items-center odd:bg-zinc-100/50 hover:bg-zinc-200 hover:border-zinc-200 *:hover:border-zinc-50 justify-between py-3 px-4 border-b last:border-b-0">
+										<div class="flex items-center gap-4">
+											<div>
+												<svg class="fill-zinc-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+													viewBox="0 0 16 16">
+													<path
+														d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+												</svg>
+											</div>
+											<div class="flex flex-row items-center gap-6 lg:gap-2">
+												<span class="lg:min-w-40">
+													<p class="text-base font-semibold">@users![index].DisplayName</p>
+												</span>
+												<span class="flex lg:flex-row gap-2 lg:min-w-60 flex-col">
+													<p class="font-medium">Brugernavn: </p>
+													<p class="text-gray-500">@users[index].Username</p>
+												</span>
+												<span class="flex lg:flex-row gap-2 lg:min-w-60 flex-col">
+													<p class="font-medium">Rolle: </p>
+													<p class="text-gray-500">
+														@(roles?.FirstOrDefault(r => r.Id == users[index].RoleId)?.Name ?? "-")
+													</p>
+												</span>
+											</div>
 										</div>
-										<div>
-											<p class="text-lg font-semibold">@user.DisplayName</p>
-											<p class="text-gray-500">@user.Username</p>
-											<p class="text-lg font-semibold">@(roles?.FirstOrDefault(r => r.Id == user.RoleId)?.Name
-																					?? "-")</p>
+										<button @onclick="async () => OpenUserEditModal(index)" type="button"
+											class="flex px-4 gap-2 text-sm font-medium h-10 w-fit justify-center items-center focus:outline-offset-4 p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800">
+
+											<span>Rediger</span>
+
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+												class="bi bi-pen" viewBox="0 0 16 16">
+												<path
+													d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z" />
+											</svg>
+										</button>
+									</div>
+								}
 							</div>
-						</div>
-						<button class="bg-blue-500 text-white px-4 py-2 rounded">Rediger</button>
-					</div>
-										}
 						</div>
 					}
 				}
@@ -138,6 +165,135 @@
 				</EditForm>
 			</div>
 		}
+		@if (UserEditModalVisible)
+		{
+			<div class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+				style="pointer-events: auto;"></div>
+			<div
+				class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-sm translate-x-[-50%] translate-y-[-50%] gap-2 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+				<div class="flex flex-row text-center sm:text-left justify-between">
+					<h2 class="text-lg font-semibold">Rediger bruger</h2>
+					<button type="submit" @onclick="async () => ShowDeleteUserModal()"
+						class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-red-600 text-white hover:bg-red-600/90 h-10 px-4 py-2">
+						@if (!isLoading)
+						{
+							<span>Slet</span>
+						}
+						else
+						{
+							<div role="status">
+								<svg aria-hidden="true" class="inline w-6 h-6 text-white animate-spin  fill-red-200 "
+									viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path
+										d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+										fill="currentColor" />
+									<path
+										d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+										fill="currentFill" />
+								</svg>
+								<span class="sr-only">...</span>
+							</div>
+						}
+					</button>
+				</div>
+				<EditForm class="flex flex-col gap-2" Model="@UserEditModel" OnValidSubmit="async () => await EditUser()"
+					Context="edit_user">
+					<DataAnnotationsValidator />
+
+					<p class="text-sm black font-medium self-start">Brugernavn</p>
+					<InputText @bind-Value="@UserEditModel.Username" disabled="true"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+						placeholder="Brugernavn" />
+					<!-- Validation -->
+					<ValidationMessage For="@(() => UserEditModel.Username)"
+						class="text-red-500 self-center text-sm font-medium leading-none" />
+					@* <p class="text-sm black font-medium self-start">Password</p>
+					<input value="********" disabled="true" type="password"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" /> *@
+					<p class="text-sm black font-medium self-start">Rolle</p>
+					<!-- Role dropdown -->
+					<InputSelect @bind-Value="@UserEditModel.RoleId"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base text-muted-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
+						<option disabled selected value="">Vælg rolle</option>
+						@if (roles != null && roles.Length > 0)
+						{
+							@foreach (var role in roles ?? [])
+							{
+								<option value="@role.Id">@role.Name</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="@(() => UserEditModel.RoleId)"
+						class="text-red-500 self-center text-sm font-medium leading-none" />
+					<p class="text-sm black font-medium self-start">Kaldenavn</p>
+					<InputText @bind-Value="@UserEditModel.DisplayName"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+						placeholder="Kaldenavn" />
+					<!-- Validation -->
+					<ValidationMessage For="@(() => UserEditModel.DisplayName)"
+						class="text-red-500 self-center text-sm font-medium leading-none" />
+					<!-- Submit button -->
+					<div class="inline-flex w-full gap-2 justify-end">
+						@if (!string.IsNullOrEmpty(editUserErr))
+						{
+							<div class="text-red-500 self-center text-sm font-semibold">@editUserErr</div>
+						}
+						<button type="button" @onclick="CloseUserEditModal"
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">Afvis</button>
+						<button type="submit"
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2">
+							@if (!isLoading)
+							{
+								<span>Bekræft</span>
+							}
+							else
+							{
+								<div role="status">
+									<svg aria-hidden="true"
+										class="inline w-6 h-6 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
+										viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path
+											d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+											fill="currentColor" />
+										<path
+											d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+											fill="currentFill" />
+									</svg>
+									<span class="sr-only">Sender...</span>
+								</div>
+							}
+
+						</button>
+					</div>
+
+				</EditForm>
+			</div>
+			@if (UserDeleteModalVisible)
+			{
+				<div class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+					style="pointer-events: auto;"></div>
+				<div
+					class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+					<div class="flex flex-col space-y-2 text-center sm:text-left">
+						<h2 class="text-lg font-semibold">Er du sikker på active du vil slette
+							@UserEditModel.DisplayName? <span
+								class="text-base font-medium text-zinc-400">@UserEditModel.Username</span></h2>
+						<p class="text-sm text-muted-foreground">Dette kan ikke fortrydes. Dette vil fjerne
+							alt data relateret til denne bruger.</p>
+					</div>
+					<div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+						@if (!string.IsNullOrEmpty(editUserErr))
+						{
+							<div class="text-red-500 text-sm font-semibold">@editUserErr</div>
+						}
+						<button type="button" @onclick="async () => HideDeleteUserModal()"
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">Afvis</button>
+						<button type="button" @onclick="async () => await DeleteUser(UserEditModel.Id)"
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2">Bekræft</button>
+					</div>
+				</div>
+			}
+		}
 	</Authorized>
 	<NotAuthorized>
 		@{
@@ -156,19 +312,113 @@
 	private string errorMessage = string.Empty;
 
 	private bool UserModalVisible = false;
-	private string addUserErr = string.Empty;
+	private bool UserEditModalVisible = false;
 
-	private User UserModel = new User();
+	private bool UserDeleteModalVisible = false;
+
+	private string addUserErr = string.Empty;
+	private string editUserErr = string.Empty;
+
+	private AddUserModel UserModel = new AddUserModel();
+	private EditUserModel UserEditModel = new EditUserModel();
+
+	private void ShowDeleteUserModal()
+	{
+		UserDeleteModalVisible = true;
+		editUserErr = string.Empty;
+	}
+	private void HideDeleteUserModal()
+	{
+		UserDeleteModalVisible = false;
+		editUserErr = string.Empty;
+	}
+
+	private void CloseUserEditModal()
+	{
+		UserEditModalVisible = false;
+		editUserErr = string.Empty;
+		UserEditModel = new EditUserModel(); // Reset the model
+	}
+	private void OpenUserEditModal(int index)
+	{
+		var user = users![index];
+
+		UserEditModel = new EditUserModel
+		{
+			Id = user.Id,
+			Username = user.Username,
+			DisplayName = user.DisplayName,
+			RoleId = user.RoleId,
+			// Add other properties if needed
+		};
+		UserEditModalVisible = true;
+		editUserErr = string.Empty;
+	}
 
 	private void CloseUserModal()
 	{
 		UserModalVisible = false;
 		addUserErr = string.Empty;
+		UserModel = new AddUserModel(); // Reset the model
 	}
 	private void OpenUserModal()
 	{
 		UserModalVisible = true;
 		addUserErr = string.Empty;
+	}
+
+	public async Task DeleteUser(int id)
+	{
+		isLoading = true;
+		var result = await MeasurementService.DeleteUserAsync(id);
+		if (result)
+		{
+			var new_users = await MeasurementService.FetchUsersAsync();
+			if (users == null)
+			{
+				errorMessage = "Der opstod en fejl under hentning af brugere.";
+			}
+			else
+			{
+				errorMessage = string.Empty;
+				users = new_users;
+			}
+			StateHasChanged();
+			HideDeleteUserModal();
+			CloseUserEditModal();
+		}
+		else
+		{
+			editUserErr = "Der skete en fejl. Prøv venligst igen.";
+		}
+		isLoading = false;
+	}
+
+
+	public async Task EditUser()
+	{
+		isLoading = true;
+		var result = await MeasurementService.UpdateUserAsync(UserEditModel);
+		if (result)
+		{
+			var new_users = await MeasurementService.FetchUsersAsync();
+			if (users == null)
+			{
+				errorMessage = "Der opstod en fejl under hentning af brugere.";
+			}
+			else
+			{
+				errorMessage = string.Empty;
+				users = new_users;
+			}
+			StateHasChanged();
+			CloseUserEditModal();
+		}
+		else
+		{
+			editUserErr = "Der skete en fejl. Prøv venligst igen.";
+		}
+		isLoading = false;
 	}
 
 	public async Task AddUser()

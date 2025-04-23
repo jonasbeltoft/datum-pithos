@@ -437,7 +437,7 @@ public class MeasurementService
 	// <summary>
 	// Add User
 	// </summary>
-	public async Task<bool> AddUserAsync(User user)
+	public async Task<bool> AddUserAsync(AddUserModel user)
 	{
 		try
 		{
@@ -470,6 +470,46 @@ public class MeasurementService
 		catch (Exception ex)
 		{
 			Console.WriteLine($"Error adding user: {ex.Message}");
+			return false;
+		}
+	}
+
+	// <summary>
+	// Updates a user.
+	// </summary>
+	public async Task<bool> UpdateUserAsync(EditUserModel user)
+	{
+		try
+		{
+			var paramsDict = new Dictionary<string, string>
+			{
+				{ "user_id", user.Id.ToString()},
+				{ "display_name", user.DisplayName },
+				{ "role_id", user.RoleId.ToString() }
+			};
+
+			var qparams = string.Join("&", paramsDict.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
+			if (!string.IsNullOrEmpty(qparams))
+			{
+				qparams = "?" + qparams;
+			}
+			else
+			{
+				return false;
+			}
+
+			HttpResponseMessage response = await httpClient.PutAsync($"users{qparams}", new StringContent(""));
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to update user: {response.StatusCode}");
+				return false;
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error updating user: {ex.Message}");
 			return false;
 		}
 	}
@@ -508,7 +548,7 @@ public class MeasurementService
 	{
 		try
 		{
-			HttpResponseMessage response = await httpClient.DeleteAsync($"users?id={id}");
+			HttpResponseMessage response = await httpClient.DeleteAsync($"users?user_id={id}");
 
 			if (!response.IsSuccessStatusCode)
 			{
@@ -616,6 +656,24 @@ public class User
 	[JsonPropertyName("id")]
 	public int Id { get; set; }
 
+	[JsonPropertyName("username")]
+	public string Username { get; set; } = string.Empty;
+
+	[JsonPropertyName("password")]
+	public string Password { get; set; } = string.Empty;
+
+	[JsonPropertyName("display_name")]
+	public string DisplayName { get; set; } = string.Empty;
+
+	[JsonPropertyName("role_id")]
+	public int RoleId { get; set; }
+}
+
+public class AddUserModel
+{
+	[JsonPropertyName("id")]
+	public int Id { get; set; }
+
 	[Required(ErrorMessage = "Brugernavn er påkrævet")]
 	[MaxLength(50, ErrorMessage = "Maksimal længde er 50 tegn")]
 	[MinLength(8, ErrorMessage = "Minimum længde er 8 tegn")]
@@ -628,7 +686,7 @@ public class User
 	[JsonPropertyName("password")]
 	public string Password { get; set; } = string.Empty;
 
-	[JsonPropertyName("displayName")]
+	[JsonPropertyName("display_name")]
 	public string DisplayName { get; set; } = string.Empty;
 
 	// 0 is default, so check if it is set to 0 or not
@@ -637,6 +695,32 @@ public class User
 	[JsonPropertyName("role_id")]
 	public int RoleId { get; set; }
 }
+
+
+public class EditUserModel
+{
+	[JsonPropertyName("id")]
+	public int Id { get; set; }
+
+	[JsonPropertyName("username")]
+	public string Username { get; set; } = string.Empty;
+
+	[JsonPropertyName("password")]
+	public string Password { get; set; } = string.Empty;
+
+	[Required(ErrorMessage = "Brugernavn er påkrævet")]
+	[MaxLength(50, ErrorMessage = "Maksimal længde er 50 tegn")]
+	[MinLength(3, ErrorMessage = "Minimum længde er 3 tegn")]
+	[JsonPropertyName("display_name")]
+	public string DisplayName { get; set; } = string.Empty;
+
+	// 0 is default, so check if it is set to 0 or not
+	[Required(ErrorMessage = "Rolle er påkrævet")]
+	[Range(1, int.MaxValue, ErrorMessage = "Rolle er påkrævet")]
+	[JsonPropertyName("role_id")]
+	public int RoleId { get; set; }
+}
+
 
 public class LogEntry
 {

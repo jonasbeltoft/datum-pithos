@@ -30,9 +30,9 @@
 								<p class="m-0 text-gray-500">
 									@DateTimeOffset.FromUnixTimeSeconds(log.CreatedAt).ToLocalTime().ToString("yyyy-MM-dd HH:mm")
 								</p>
-								<span>
+								<p class="!font-semibold">
 									@getLogUserName(log)
-								</span>
+								</p>
 								<span>
 									@(log.RequestUrl.Split(' ')[0] ?? "")
 								</span>

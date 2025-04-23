@@ -92,6 +92,13 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "At least one of display_name or role_id is required", http.StatusBadRequest)
 		return
 	}
+	if len(displayName) > 50 {
+		http.Error(w, "Display name must be at most 50 characters", http.StatusBadRequest)
+		return
+	} else if len(displayName) < 3 {
+		http.Error(w, "Display name must be at least 3 characters", http.StatusBadRequest)
+		return
+	}
 
 	var roleIdInt *int
 	if roleId != "" {
