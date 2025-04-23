@@ -33,10 +33,13 @@
 			{
 				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 			}
+			else
+			{
+				return new AuthenticationState(user);
+			}
 			try
 			{
-
-				var response = await httpClient.GetAsync("profile");
+				var response = await httpClient.GetAsync("auth");
 				if (response.IsSuccessStatusCode)
 				{
 					var strResponse = await response.Content.ReadAsStringAsync();
@@ -53,8 +56,8 @@
 
 					var identity = new ClaimsIdentity(claims, "Token");
 					user = new ClaimsPrincipal(identity);
-					return new AuthenticationState(user);
 				}
+				return new AuthenticationState(user);
 			}
 			catch
 			{
@@ -136,16 +139,16 @@
 
 		public async Task SetItemAsync(string key, string value)
 		{
-			await jSRuntime.InvokeVoidAsync("sessionStorage.setItem", key, value);
+			await jSRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
 		}
 		public async Task<string?> GetItemAsync(string key)
 		{
-			return await jSRuntime.InvokeAsync<string>("sessionStorage.getItem", key);
+			return await jSRuntime.InvokeAsync<string>("localStorage.getItem", key);
 		}
 
 		public async Task RemoveItemAsync(string key)
 		{
-			await jSRuntime.InvokeVoidAsync("sessionStorage.removeItem", key);
+			await jSRuntime.InvokeVoidAsync("localStorage.removeItem", key);
 		}
 	}
 }

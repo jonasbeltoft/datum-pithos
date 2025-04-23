@@ -1,6 +1,9 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <Authorizing>
+                <div class="loader !w-screen"></div>
+            </Authorizing>
             <NotAuthorized>
                 @{
                     @inject NavigationManager NavigationManager;

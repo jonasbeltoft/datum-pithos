@@ -1,0 +1,228 @@
+﻿@page "/users"
+@inject NavigationManager Nav
+
+<AuthorizeView Roles="admin">
+	<Authorized>
+		<div class="m-4 flex flex-col flex-grow w-px">
+			<h1 class="text-3xl self-start font-bold mb-4">Brugere</h1>
+			<div class="flex flex-col gap-4">
+				@if (isLoading)
+				{
+					<div class="loader"></div>
+				}
+				@if (!string.IsNullOrEmpty(errorMessage) || users == null || roles == null)
+				{
+					<p class="text-red-500">@errorMessage</p>
+				}
+				else
+				{
+					<button @onclick="OpenUserModal" type="button"
+						class="whitespace-nowrap focus:outline-offset-4 grid place-items-center p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800">
+
+						<span>Lav Ny bruger</span>
+
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" viewBox="0 0 16 16">
+							<path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+							<path fill-rule="evenodd"
+								d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5" />
+						</svg>
+					</button>
+					if (users?.Count() == 0 && !isLoading)
+					{
+						<p class="text-gray-500">Ingen brugere tilgængelige.</p>
+					}
+					else
+					{
+						<div>
+							@foreach (var user in users!)
+							{
+								<div class="flex items-center justify-between p-4 border-b border-gray-200">
+									<div class="flex items-center gap-4">
+										<div>
+											<svg class="fill-zinc-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+												viewBox="0 0 16 16">
+												<path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+											</svg>
+										</div>
+										<div>
+											<p class="text-lg font-semibold">@user.DisplayName</p>
+											<p class="text-gray-500">@user.Username</p>
+											<p class="text-lg font-semibold">@(roles?.FirstOrDefault(r => r.Id == user.RoleId)?.Name
+																					?? "-")</p>
+							</div>
+						</div>
+						<button class="bg-blue-500 text-white px-4 py-2 rounded">Rediger</button>
+					</div>
+										}
+						</div>
+					}
+				}
+			</div>
+		</div>
+		@if (UserModalVisible)
+		{
+			<div class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+				style="pointer-events: auto;"></div>
+			<div
+				class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-sm translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+				<div class="flex flex-col space-y-2 text-center sm:text-left">
+					<h2 id="radix-:r35:" class="text-lg font-semibold">Tilføj ny bruger</h2>
+				</div>
+				<EditForm class="flex flex-col gap-2" Model="@UserModel" OnValidSubmit="async () => await AddUser()"
+					Context="add_user">
+					<DataAnnotationsValidator />
+
+					<p class="text-sm black font-medium self-start">Brugernavn</p>
+					<InputText @bind-Value="@UserModel.Username"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+						placeholder="Brugernavn" />
+					<!-- Validation -->
+					<ValidationMessage For="@(() => UserModel.Username)"
+						class="text-red-500 self-center text-sm font-medium leading-none" />
+					<p class="text-sm black font-medium self-start">Password</p>
+					<InputText @bind-Value="@UserModel.Password"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+						placeholder="Password" />
+					<ValidationMessage For="@(() => UserModel.Password)"
+						class="text-red-500 self-center text-sm font-medium leading-none" />
+					<p class="text-sm black font-medium self-start">Rolle</p>
+					<!-- Role dropdown -->
+					<InputSelect @bind-Value="@UserModel.RoleId"
+						class="ring-zinc-900 focus:outline-none inline-flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base text-muted-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
+						<option disabled selected value="">Vælg rolle</option>
+						@if (roles != null && roles.Length > 0)
+						{
+							@foreach (var role in roles ?? [])
+							{
+								<option value="@role.Id">@role.Name</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="@(() => UserModel.RoleId)"
+						class="text-red-500 self-center text-sm font-medium leading-none" />
+
+					<!-- Submit button -->
+					<div class="inline-flex w-full gap-2 justify-end">
+						@if (!string.IsNullOrEmpty(addUserErr))
+						{
+							<div class="text-red-500 self-center text-sm font-semibold">@addUserErr</div>
+						}
+						<button type="button" @onclick="CloseUserModal"
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">Afvis</button>
+						<button type="submit"
+							class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2">
+							@if (!isLoading)
+							{
+								<span>Bekræft</span>
+							}
+							else
+							{
+								<div role="status">
+									<svg aria-hidden="true"
+										class="inline w-6 h-6 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
+										viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path
+											d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+											fill="currentColor" />
+										<path
+											d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+											fill="currentFill" />
+									</svg>
+									<span class="sr-only">Sender...</span>
+								</div>
+							}
+
+						</button>
+					</div>
+
+				</EditForm>
+			</div>
+		}
+	</Authorized>
+	<NotAuthorized>
+		@{
+			Nav.NavigateTo("/access-denied");
+		}
+	</NotAuthorized>
+</AuthorizeView>
+
+@code {
+	[Inject]
+	public MeasurementService MeasurementService { get; set; } = default!;
+
+	private User[]? users = [];
+	private Role[]? roles = [];
+	private bool isLoading = true;
+	private string errorMessage = string.Empty;
+
+	private bool UserModalVisible = false;
+	private string addUserErr = string.Empty;
+
+	private User UserModel = new User();
+
+	private void CloseUserModal()
+	{
+		UserModalVisible = false;
+		addUserErr = string.Empty;
+	}
+	private void OpenUserModal()
+	{
+		UserModalVisible = true;
+		addUserErr = string.Empty;
+	}
+
+	public async Task AddUser()
+	{
+		isLoading = true;
+		var result = await MeasurementService.AddUserAsync(UserModel);
+		if (result)
+		{
+			// Optionally, you can fetch the updated list of users here
+			var new_users = await MeasurementService.FetchUsersAsync();
+			if (users == null)
+			{
+				errorMessage = "Der opstod en fejl under hentning af brugere.";
+			}
+			else
+			{
+				errorMessage = string.Empty;
+				users = new_users;
+			}
+			StateHasChanged();
+			CloseUserModal();
+		}
+		else
+		{
+			// Handle error
+			addUserErr = "Der skete en fejl. Prøv venligst igen.";
+		}
+		isLoading = false;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			roles = await MeasurementService.FetchRolesAsync();
+			users = await MeasurementService.FetchUsersAsync();
+
+			if (roles == null)
+			{
+				errorMessage = "Der opstod en fejl under hentning af roller.";
+			}
+			if (users == null)
+			{
+				errorMessage = "Der opstod en fejl under hentning af brugere.";
+			}
+		}
+		catch (Exception ex)
+		{
+			errorMessage = ex.Message;
+		}
+		finally
+		{
+			isLoading = false;
+		}
+	}
+
+}

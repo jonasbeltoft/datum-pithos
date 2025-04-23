@@ -61,15 +61,189 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 }
 
 /*
+Update a user by their ID
+
 Params:
 
-	{
-		username: string
-		password: string
-		role_id: int
-	}
+	user_id: int
+	display_name: string
+	role_id: int
 */
-func registerHandler(w http.ResponseWriter, r *http.Request) {
+func updateUserHandler(w http.ResponseWriter, r *http.Request) {
+	displayName := r.FormValue("display_name")
+	roleId := r.FormValue("role_id")
+	_userId := r.FormValue("user_id")
+
+	var err error
+
+	var userId int
+	if _userId == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	} else {
+		userId, err = strconv.Atoi(_userId)
+		if err != nil {
+			http.Error(w, "Invalid User ID", http.StatusBadRequest)
+			return
+		}
+	}
+
+	if displayName == "" && roleId == "" {
+		http.Error(w, "At least one of display_name or role_id is required", http.StatusBadRequest)
+		return
+	}
+
+	var roleIdInt *int
+	if roleId != "" {
+		rid, err := strconv.Atoi(roleId)
+		if err != nil {
+			http.Error(w, "Invalid Role ID", http.StatusBadRequest)
+			return
+		}
+		roleIdInt = &rid
+	}
+
+	user := User{
+		Id: userId,
+	}
+	if roleId != "" {
+		user.RoleId = roleIdInt
+	}
+	if displayName != "" {
+		user.DisplayName = &displayName
+	}
+
+	err = updateUserBasic(user)
+	if err != nil {
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintln(w, "User updated successfully")
+}
+
+/*
+Get all roles
+*/
+func fetchRolesHandler(w http.ResponseWriter, r *http.Request) {
+	var roles []Role = []Role{}
+	var err error
+
+	query := "SELECT id, name FROM roles;"
+	rows, err := DB.Query(query)
+	if err != nil {
+		http.Error(w, "Failed to fetch roles", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var role Role
+		err := rows.Scan(&role.Id, &role.Name)
+		if err != nil {
+			http.Error(w, "Failed to fetch roles", http.StatusInternalServerError)
+			return
+		}
+		roles = append(roles, role)
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Failed to fetch roles", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(roles)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintln(w, string(result))
+}
+
+type Role struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+/*
+Delete a user by their ID
+
+Params:
+
+	user_id: int
+*/
+func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	_userId := r.FormValue("user_id")
+	if _userId == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	userId, err := strconv.Atoi(_userId)
+	if err != nil {
+		http.Error(w, "Invalid User ID", http.StatusBadRequest)
+		return
+	}
+
+	deleteUser(userId)
+	if err != nil {
+		http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintln(w, "User deleted successfully")
+}
+
+/*
+Fetch all users
+*/
+func fetchUsersHandler(w http.ResponseWriter, r *http.Request) {
+	var users []User = []User{}
+	var err error
+
+	query := "SELECT id, username, role_id, display_name FROM users;"
+	rows, err := DB.Query(query)
+	if err != nil {
+		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.Id, &user.Username, &user.RoleId, &user.DisplayName)
+		if err != nil {
+			http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := json.Marshal(users)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintln(w, string(result))
+}
+
+/*
+Params:
+
+	username: string
+	password: string
+	role_id: int
+*/
+func insertUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the username and password from the request body
 	username := r.FormValue("username")
 	password := r.FormValue("password")
@@ -116,7 +290,14 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "User created successfully")
+	outUser := User{
+		Id:          user.Id,
+		Username:    user.Username,
+		DisplayName: user.DisplayName,
+		RoleId:      user.RoleId,
+	}
+
+	json.NewEncoder(w).Encode(outUser)
 }
 
 /*
@@ -178,7 +359,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "User logged out successfully")
 }
 
-func profileHandler(w http.ResponseWriter, r *http.Request) {
+func authHandler(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(User)
 
 	fmt.Fprintln(w, "{ \"username\": \""+user.Username+"\", \"displayName\": \""+*user.DisplayName+"\", \"role\": \""+*user.Role+"\" }")
@@ -410,14 +591,29 @@ func deleteUser(userID int) error {
 // Updates the superficial data of a user (e.g., display_name and role_id)
 func updateUserBasic(user User) error {
 	// Prepare the UPDATE query
-	query := `
-		UPDATE users 
-		SET display_name = ?, role_id = ? 
-		WHERE id = ?;
-	`
+	query := []string{}
+	startQ := "UPDATE users SET "
+	var args []any = []any{}
+
+	if user.DisplayName != nil {
+		query = append(query, "display_name = ?")
+		args = append(args, *user.DisplayName)
+	}
+
+	if user.RoleId != nil {
+		query = append(query, "role_id = ?")
+		args = append(args, *user.RoleId)
+	}
+
+	if len(args) == 0 {
+		return fmt.Errorf("updateUserBasic: no fields to update")
+	}
+
+	startQ += strings.Join(query, ", ") + "WHERE id = ?;"
+	args = append(args, user.Id)
 
 	// Execute the UPDATE query
-	result, err := DB.Exec(query, user.DisplayName, user.RoleId, user.Id)
+	result, err := DB.Exec(startQ, args...)
 	if err != nil {
 		return fmt.Errorf("updateUserBasic: %v", err)
 	}

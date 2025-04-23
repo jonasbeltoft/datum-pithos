@@ -1,6 +1,8 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using BlazorApp.Components.Pages.Measurements;
 
@@ -433,6 +435,123 @@ public class MeasurementService
 	}
 
 	// <summary>
+	// Add User
+	// </summary>
+	public async Task<bool> AddUserAsync(User user)
+	{
+		try
+		{
+			var paramsDict = new Dictionary<string, string>
+			{
+				{ "username", user.Username },
+				{ "password", user.Password },
+				{ "role_id", user.RoleId.ToString() }
+			};
+
+			var qparams = string.Join("&", paramsDict.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
+			if (!string.IsNullOrEmpty(qparams))
+			{
+				qparams = "?" + qparams;
+			}
+			else
+			{
+				return false;
+			}
+
+			HttpResponseMessage response = await httpClient.PostAsync($"users{qparams}", new StringContent(""));
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to add user: {response.StatusCode}");
+				return false;
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error adding user: {ex.Message}");
+			return false;
+		}
+	}
+
+	// <summary>
+	// Fetches all users.
+	// </summary>
+	public async Task<User[]?> FetchUsersAsync()
+	{
+		try
+		{
+			HttpResponseMessage response = await httpClient.GetAsync("users");
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to fetch users: {response.StatusCode}");
+				return null;
+			}
+
+			string jsonString = await response.Content.ReadAsStringAsync();
+
+			var users = JsonSerializer.Deserialize<User[]>(jsonString) ?? null;
+			return users;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error fetching users: {ex.Message}");
+			return null;
+		}
+	}
+
+	// <summary>
+	// Deletes a user by its ID.
+	// </summary>
+	public async Task<bool> DeleteUserAsync(int id)
+	{
+		try
+		{
+			HttpResponseMessage response = await httpClient.DeleteAsync($"users?id={id}");
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to delete user: {response.StatusCode}");
+				return false;
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error deleting user: {ex.Message}");
+			return false;
+		}
+	}
+
+	// <summary>
+	// Get all roles.
+	// </summary>
+	public async Task<Role[]> FetchRolesAsync()
+	{
+		try
+		{
+			HttpResponseMessage response = await httpClient.GetAsync("roles");
+
+			if (!response.IsSuccessStatusCode)
+			{
+				Console.WriteLine($"Failed to fetch roles: {response.StatusCode}");
+				return Array.Empty<Role>();
+			}
+
+			string jsonString = await response.Content.ReadAsStringAsync();
+
+			var roles = JsonSerializer.Deserialize<Role[]>(jsonString) ?? [];
+			return roles;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error fetching roles: {ex.Message}");
+			return Array.Empty<Role>();
+		}
+	}
+
+	// <summary>
 	// Add a new unit.
 	// </summary>
 	public async Task<bool> AddUnitAsync(string name)
@@ -481,6 +600,42 @@ public class MeasurementService
 		}
 		return (collection, true);
 	}
+}
+
+public class Role
+{
+	[JsonPropertyName("id")]
+	public int Id { get; set; }
+
+	[JsonPropertyName("name")]
+	public string Name { get; set; } = string.Empty;
+}
+
+public class User
+{
+	[JsonPropertyName("id")]
+	public int Id { get; set; }
+
+	[Required(ErrorMessage = "Brugernavn er påkrævet")]
+	[MaxLength(50, ErrorMessage = "Maksimal længde er 50 tegn")]
+	[MinLength(8, ErrorMessage = "Minimum længde er 8 tegn")]
+	[JsonPropertyName("username")]
+	public string Username { get; set; } = string.Empty;
+
+	[Required(ErrorMessage = "Password er påkrævet")]
+	[MaxLength(50, ErrorMessage = "Maksimal længde er 50 tegn")]
+	[MinLength(8, ErrorMessage = "Minimum længde er 8 tegn")]
+	[JsonPropertyName("password")]
+	public string Password { get; set; } = string.Empty;
+
+	[JsonPropertyName("displayName")]
+	public string DisplayName { get; set; } = string.Empty;
+
+	// 0 is default, so check if it is set to 0 or not
+	[Required(ErrorMessage = "Rolle er påkrævet")]
+	[Range(1, int.MaxValue, ErrorMessage = "Rolle er påkrævet")]
+	[JsonPropertyName("role_id")]
+	public int RoleId { get; set; }
 }
 
 public class LogEntry

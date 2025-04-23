@@ -14,8 +14,9 @@
 				<p class="text-sm text-zinc-500">@Collection.Description</p>
 			</div>
 			<div class="flex flex-row items-center gap-2 w-full h-10 mb-2">
-				<button @onclick="async () => await AddMeasurement()"
-					class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2">
+				<button
+					class="ring-zinc-900 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-zinc-900 text-white hover:bg-primary/90 h-10 px-4 py-2"
+					@onclick="async () => await AddMeasurement()">
 					@if (!addingMeasurement)
 					{
 						<span>Indsæt ny måling</span>
@@ -38,8 +39,9 @@
 					}
 				</button>
 				@* @onclick="async () => await AddAttribute()" *@
-				<button @onclick="async () => ShowAttributeModal()"
-					class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">
+				<button
+					class="ring-zinc-900 inline-flex items-center justify-center gap-2 whitespace-nowrap focus:outline-offset-4 rounded-md text-sm font-medium ring-offset-background transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0"
+					@onclick="async () => ShowAttributeModal()">
 					@if (!addingAttribute)
 					{
 						<span>Tilføj kolonne</span>
@@ -82,7 +84,7 @@
 							class="p-2 w-[20ch] min-w-9 ring-zinc-900 focus:outline-none rounded-md border border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
 							placeholder="-" type="datetime-local"
 							value="@(timeFrom != null ? DateTimeOffset.FromUnixTimeSeconds(timeFrom ?? 0).ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-")"
-							@onchange="@((ChangeEventArgs args) => timeFrom = args.Value != null && args.Value?.ToString()?.Length != 0 ? DateTimeOffset.Parse(args.Value?.ToString()).ToUnixTimeSeconds() : null)" />
+							@onchange="@((ChangeEventArgs args) => timeFrom = args.Value != null && args.Value?.ToString()?.Length != 0 ? DateTimeOffset.Parse(args.Value?.ToString()!).ToUnixTimeSeconds() : null)" />
 					</div>
 					<div>
 						<p class="text-sm text-black font-semibold">Til</p>
@@ -90,7 +92,7 @@
 							class="p-2 w-[20ch] min-w-9 ring-zinc-900 focus:outline-none rounded-md border border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
 							placeholder="-" type="datetime-local"
 							value="@(timeFrom != null ? DateTimeOffset.FromUnixTimeSeconds(timeTo ?? 0).ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-")"
-							@onchange="@((ChangeEventArgs args) => timeTo = args.Value != null && args.Value?.ToString()?.Length != 0 ? DateTimeOffset.Parse(args.Value?.ToString()).ToUnixTimeSeconds() : null)" />
+							@onchange="@((ChangeEventArgs args) => timeTo = args.Value != null && args.Value?.ToString()?.Length != 0 ? DateTimeOffset.Parse(args.Value?.ToString()!).ToUnixTimeSeconds() : null)" />
 					</div>
 				</span>
 			</div>
@@ -204,7 +206,6 @@
 	private bool isSearchDisabled = true;
 	private bool addingMeasurement = false;
 	private bool addingAttribute = false;
-	private bool addingUnit = false;
 
 	[Inject]
 	private NavigationManager Navigation { get; set; } = default!;
@@ -262,7 +263,6 @@
 	}
 	public async Task AddUnit()
 	{
-		addingUnit = true;
 		var result = await MeasurementService.AddUnitAsync(UnitModel.Name);
 		if (result)
 		{
@@ -275,7 +275,6 @@
 		{
 			addUnitErr = "Der skete en fejl under tilføjelse af målings enhed.";
 		}
-		addingUnit = false;
 	}
 
 	public async Task AddAttribute()

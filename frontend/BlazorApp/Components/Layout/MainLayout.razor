@@ -3,7 +3,7 @@
 @inject NavigationManager Navigator
 
 <header class="bg-white border-b border-zinc-200">
-    <div class="mx-auto flex items-center justify-between px-3 h-14 lg:px-8">
+    <div class="mx-auto flex items-center justify-between px-3 h-14 lg:pl-8">
         <a class="flex flex-row gap-2" href="">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="black" class="bi bi-database-fill"
                 viewBox="0 0 16 16">
@@ -34,6 +34,10 @@
                                 <NavLink class="font-semibold [&.active]:underline" href="logs"
                                     Match="NavLinkMatch.Prefix">
                                     Logs
+                                </NavLink>
+                                <NavLink class="font-semibold [&.active]:underline" href="users"
+                                    Match="NavLinkMatch.Prefix">
+                                    Users
                                 </NavLink>
                             </Authorized>
                         </AuthorizeView>
