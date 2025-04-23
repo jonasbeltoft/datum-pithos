@@ -1,5 +1,14 @@
 name: datum-pithos
 services:
+  web:
+    build:
+      context: ./frontend/BlazorApp
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    restart: unless-stopped
   backend:
     image: backend
     build:

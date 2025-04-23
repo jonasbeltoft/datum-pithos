@@ -2,7 +2,6 @@
 
 up:
 	docker compose up --detach --remove-orphans --build
-	dotnet watch --project .\frontend\BlazorApp\ --no-hot-reload
 
 backend:
 	docker compose up --remove-orphans --build
