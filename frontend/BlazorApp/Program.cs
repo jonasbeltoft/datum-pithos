@@ -13,7 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:8000/api/v1/") });
+// api url for backend
+var backendUrl = builder.Configuration.GetValue<string>("BACKEND_URL") ?? "http://localhost:8000/api/v1/";
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(backendUrl) });
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorizationCore();

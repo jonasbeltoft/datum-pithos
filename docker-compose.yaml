@@ -5,10 +5,13 @@ services:
       context: ./frontend/BlazorApp
       dockerfile: Dockerfile
     ports:
-      - "5000:80"
+      - "8080:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - BACKEND_URL=http://backend:8000/api/v1/
     restart: unless-stopped
+    depends_on:
+      - backend
+
   backend:
     image: backend
     build:
@@ -16,5 +19,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    environment:
+      - USERNAME=admin
+      - PASSWORD=admin
     volumes:
       - ./db:/db

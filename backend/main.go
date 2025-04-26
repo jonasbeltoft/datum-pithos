@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -123,25 +121,16 @@ func initAdminUser() error {
 	}
 
 	// Create the admin user
-	// Read the 'auth_init.txt' file to get the username and password
-	file, err := os.Open(db_files + "auth_init.txt")
-	if err != nil {
-		return err
+
+	// Read the env to get the username and password
+	username := os.Getenv("USERNAME")
+	if username == "" {
+		return fmt.Errorf("USERNAME environment variable not set")
 	}
-	defer file.Close()
 
-	// Read the file line by line
-	var username, password string
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "username=") {
-			username = strings.TrimPrefix(line, "username=")
-		} else if strings.HasPrefix(line, "password=") {
-			password = strings.TrimPrefix(line, "password=")
-		}
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		return fmt.Errorf("PASSWORD environment variable not set")
 	}
 
 	// Hash the password
@@ -150,15 +139,14 @@ func initAdminUser() error {
 		return err
 	}
 
-	role_id := new(int)
-	*role_id = 1
+	role_id := 1
 
 	// Create a new user
 	user := User{
 		Username:       username,
 		HashedPassword: hashedPassword,
 		DisplayName:    &username,
-		RoleId:         role_id,
+		RoleId:         &role_id,
 	}
 
 	user, err = createUser(user)

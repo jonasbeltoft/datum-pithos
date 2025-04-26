@@ -43,7 +43,7 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 		url := r.URL.RequestURI()
 
 		// Hide password in logs
-		if r.URL.Path == "/register" {
+		if strings.HasSuffix(r.URL.Path, "/users") {
 			params := strings.Split(url, "&")
 			for i, param := range params {
 				if strings.Contains(param, "password") {
@@ -52,7 +52,7 @@ func dbLoggerMiddleware(next http.Handler) http.Handler {
 			}
 			url = strings.Join(params, "&")
 		}
-		if r.URL.Path == "/login" {
+		if strings.HasSuffix(r.URL.Path, "/login") {
 			var body LoginBody
 			err = json.Unmarshal(bodyBytes, &body)
 			if err != nil {
