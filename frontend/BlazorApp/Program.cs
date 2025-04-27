@@ -38,4 +38,7 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode().AllowAnonymous();
 
+// app.MapFallbackToPage("/");
+app.UseStatusCodePagesWithRedirects("/404");
+
 app.Run();

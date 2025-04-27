@@ -4,23 +4,23 @@
 
 <PageTitle>Målinger</PageTitle>
 
-<div class="flex flex-grow flex-row max-w-[calc(100%-1rem)]">
-    <div class="flex flex-col justify-start overflow-hidden transition-[width] transition-[padding] duration-300 border-zinc-200 bg-white"
+<div class="flex max-w-[calc(100%-1rem)] flex-grow flex-row">
+    <div class="flex flex-col justify-start overflow-hidden border-zinc-200 bg-white transition-[width] transition-[padding] duration-300"
         style="width: @(showSideBar ? "16rem" : "0px"); border-right: @(showSideBar ? "1px solid rgb(228 228 231)" : "none"); padding-left: @(showSideBar ? "0.5rem" : "0px");">
 
-        <h2 class="text-base py-3 mr-4 px-2 font-semibold text-black border-b">Samlinger</h2>
-        <nav class="pr-4 py-3 flex flex-col gap-2 font-medium">
+        <h2 class="mr-4 border-b px-2 py-3 text-base font-semibold text-black">Samlinger</h2>
+        <nav class="flex flex-col gap-2 py-3 pr-4 font-medium">
             @foreach (var collection in Collections)
             {
                 <NavLink
-                    class="group inline-flex flex-nowrap gap-2 justify-between items-center has-[.active]:bg-zinc-100 p-2 rounded-lg hover:bg-zinc-100"
+                    class="group inline-flex flex-nowrap items-center justify-between gap-2 rounded-lg p-2 hover:bg-zinc-100 has-[.active]:bg-zinc-100"
                     href="@GetLink(collection.Value.Id)" Match="NavLinkMatch.All">
                     <div class="grow whitespace-nowrap">
                         @collection.Value.Name
                     </div>
-                    <button @onclick="() => ShowModal(collection.Value.Id)"
-                        class="w-5 h-5 group-hover:block hidden relative *:hover:fill-white hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 hover:before:rounded-md hover:before:-z-0 hover:before:p-2 hover:before:m-[-0.5rem]">
-                        <svg class="relative fill-red-500 z-10" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    <button class="w-5 h-5 group-hover:block hidden relative *:hover:fill-white hover:before:content-[''] hover:before:absolute hover:before:inset-0 hover:before:bg-red-500 hover:before:rounded-md hover:before:-z-0 hover:before:p-2 hover:before:m-[-0.5rem]"
+                        @onclick="() => ShowModal(collection.Value.Id)">
+                        <svg class="relative z-10 fill-red-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                             viewBox="0 0 16 16">
                             <path
                                 d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
@@ -31,17 +31,17 @@
                 </NavLink>
             }
         </nav>
-        <div class="pr-4 mt-auto py-3 font-semibold">
+        <div class="mt-auto py-3 pr-4 font-semibold">
             <NavLink
-                class="whitespace-nowrap focus:outline-offset-4 grid place-items-center p-2 rounded-lg text-white bg-zinc-900 hover:bg-zinc-800 "
+                class="grid place-items-center rounded-lg bg-zinc-900 p-2 whitespace-nowrap text-white hover:bg-zinc-800 focus:outline-offset-4"
                 href="/measurements/new" Match="NavLinkMatch.All">
                 Ny samling
             </NavLink>
         </div>
     </div>
-    <button class="inline-block overflow-visible p-0 m-0 w-0 h-0" @onclick="() => showSideBar = !showSideBar">
-        <span class="relative  top-[10px] cursor-pointer @(showSideBar ? "-left-10" : "-left-1")">
-            <div class="w-7 h-7 bg-transparent hover:bg-zinc-100 rounded-md grid place-items-center">
+    <button class="m-0 inline-block h-0 w-0 overflow-visible p-0" @onclick="() => showSideBar = !showSideBar">
+        <span class="relative top-[10px] cursor-pointer @(showSideBar ? "-left-10" : "-left-1")">
+            <div class="bg-transparent grid h-7 w-7 place-items-center rounded-md hover:bg-zinc-100">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" class="fill-black">
                     <path
                         d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5-1v12h9a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM4 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h2z" />
@@ -52,7 +52,7 @@
     </button>
 
     <CascadingValue Value="this">
-        <main class="mt-6 ml-8 mb-3 flex-grow @(showSideBar ? "max-w-[calc(100%-16rem)]" : "max-w-[calc(100%-2rem)]")">
+        <main class="mt-6 mb-3 ml-8 flex-grow @(showSideBar ? "max-w-[calc(100%-16rem)]" : "max-w-[calc(100%-2rem)]")">
             @Body
         </main>
     </CascadingValue>
@@ -62,17 +62,17 @@
     <div class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
         style="pointer-events: auto;"></div>
     <div
-        class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+        class="fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 sm:rounded-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
         <div class="flex flex-col space-y-2 text-center sm:text-left">
             <h2 id="radix-:r35:" class="text-lg font-semibold">Er du sikker på active du vil slette
                 @Collections[ModalCollectionId].Name</h2>
-            <p id="radix-:r36:" class="text-sm text-muted-foreground">Dette kan ikke fortrydes. Dette vil fjerne
+            <p id="radix-:r36:" class="text-muted-foreground text-sm">Dette kan ikke fortrydes. Dette vil fjerne
                 alt data relateret til denne samling, samt alle målinger.</p>
         </div>
         <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
             @if (!string.IsNullOrEmpty(deleteErr))
             {
-                <div class="text-red-500 text-sm font-semibold">@deleteErr</div>
+                <div class="text-sm font-semibold text-red-500">@deleteErr</div>
             }
             <button type="button" @onclick="async () => HideModal()"
                 class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-2 sm:mt-0">Afvis</button>
