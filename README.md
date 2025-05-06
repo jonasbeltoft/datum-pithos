@@ -24,17 +24,4 @@
 
 ## Database
 
-- [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/) as database for storing data  
-
-## Auth
-
-- [![Zitadel](https://img.shields.io/badge/Zitadel-0F172A?logo=zitadel&logoColor=white)](https://zitadel.com/) as authentication provider  
-
-  - username: zitadel-admin@zitadel.localhost
-  - password: Password1!
-
-  - username: test1@mail.com
-  - password: !Test1234
-
-  - username: test2@mail.com
-  - password: !Test1234
+- [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/) as database for storing data
