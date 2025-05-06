@@ -5,6 +5,7 @@ using Blazored.LocalStorage.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,13 @@ var app = builder.Build();
 app.UseDeveloperExceptionPage();
 
 app.UseRouting();
-app.UseStaticFiles();
+
+var wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(wwwRootPath)
+});
 app.UseAntiforgery();
 
 app.UseAuthorization();

@@ -1,4 +1,4 @@
-.PHONY: deploy up backend frontend down restart logs
+.PHONY: deploy up backend frontend down restart logs build
 
 deploy:
 	docker compose up --detach --remove-orphans --build
@@ -15,7 +15,11 @@ frontend:
 down:
 	docker compose down
 
-restart: down up
+restart:
+	down up
 
 logs:
 	docker compose logs -f
+
+build:
+	.\build.bat
