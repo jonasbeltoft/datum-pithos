@@ -1,6 +1,7 @@
 ﻿@page "/measurements/{CollectionId}"
 @using BlazorApp.Services
 @using System.ComponentModel.DataAnnotations
+@using System.Globalization
 @layout MeasurementsLayout
 @rendermode @(new InteractiveServerRenderMode(prerender:false))
 
@@ -83,7 +84,7 @@
 						<input
 							class="p-2 w-[20ch] min-w-9 ring-zinc-900 focus:outline-none rounded-md border border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
 							placeholder="-" type="datetime-local"
-							value="@(timeFrom != null ? DateTimeOffset.FromUnixTimeSeconds(timeFrom ?? 0).ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-")"
+							value="@(timeFrom != null ? DateTimeOffset.FromUnixTimeSeconds(timeFrom ?? 0).ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : null)"
 							@onchange="@((ChangeEventArgs args) => timeFrom = args.Value != null && args.Value?.ToString()?.Length != 0 ? DateTimeOffset.Parse(args.Value?.ToString()!).ToUnixTimeSeconds() : null)" />
 					</div>
 					<div>
@@ -91,7 +92,7 @@
 						<input
 							class="p-2 w-[20ch] min-w-9 ring-zinc-900 focus:outline-none rounded-md border border-input bg-transparent text-sm ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30"
 							placeholder="-" type="datetime-local"
-							value="@(timeFrom != null ? DateTimeOffset.FromUnixTimeSeconds(timeTo ?? 0).ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-")"
+							value="@(timeTo != null ? DateTimeOffset.FromUnixTimeSeconds(timeTo ?? 0).ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : null)"
 							@onchange="@((ChangeEventArgs args) => timeTo = args.Value != null && args.Value?.ToString()?.Length != 0 ? DateTimeOffset.Parse(args.Value?.ToString()!).ToUnixTimeSeconds() : null)" />
 					</div>
 				</span>
